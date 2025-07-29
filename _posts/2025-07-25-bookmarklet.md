@@ -3,7 +3,7 @@ layout: post
 title: "Bookmarklet"
 date: 2025-07-25
 categories: [PicoCTF]
-tags: [picoctf, webexploitation, ctf]
+tags: [picoctf, webexploitation,Easy]
 ---
 
 ## 🔖 Challenge Description

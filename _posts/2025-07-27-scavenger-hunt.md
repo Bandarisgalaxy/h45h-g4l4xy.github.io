@@ -3,7 +3,7 @@ layout: post
 title: "Scavenger Hunt"
 date: 2025-07-27
 categories: [PicoCTF]
-tags: [picoctf, webexploitation, ctf]
+tags: [picoctf, webexploitation,Easy]
 ---
 
 ## 💡 Challenge Description  

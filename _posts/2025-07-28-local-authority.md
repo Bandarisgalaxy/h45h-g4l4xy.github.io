@@ -3,7 +3,7 @@ layout: post
 title: "Local Authority"
 date: 2025-07-28
 categories: [PicoCTF]
-tags: [picoctf, webexploitation, ctf]
+tags: [picoctf, webexploitation,Easy]
 ---
 
 ## 📄 Description  
