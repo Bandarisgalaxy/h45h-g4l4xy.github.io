@@ -2,7 +2,7 @@
 layout: post
 title: "Scavenger Hunt"
 date: 2025-07-27
-categories: [PicoCTF]
+categories: [PicoCTF, webexploitation]
 tags: [picoctf, webexploitation,Easy]
 ---
 

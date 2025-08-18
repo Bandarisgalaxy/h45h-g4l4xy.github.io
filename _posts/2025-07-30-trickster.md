@@ -2,7 +2,7 @@
 layout: post
 title: "Trickster"
 date: 2025-07-30
-categories: [PicoCTF]
+categories: [PicoCTF, webexploitation]
 tags: [picoctf,webexploitation,Medium]
 ---
 # 🃏 Trickster – PicoCTF

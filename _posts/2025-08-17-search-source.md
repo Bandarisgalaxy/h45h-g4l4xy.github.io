@@ -2,7 +2,7 @@
 layout: post
 title: "Search Source"
 date: 2025-08-17
-categories: [PicoCTF]
+categories: [PicoCTF, webexploitation]
 tags: [picoctf, webexploitation,Medium]
 ---
 ## 🔍 Challenge Name: Search Source
