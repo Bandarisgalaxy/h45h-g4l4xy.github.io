@@ -8,222 +8,187 @@ tags: [picoctf, cryptography, ctf]
 
 # Beginner’s Guide to Cryptography (for picoCTF)
 
-Cryptography is the science of securing information so that only the intended recipient can understand it. It protects passwords, private messages, and sensitive data — and in CTFs like **picoCTF**, it’s a core skill for solving challenges.
+Cryptography is the science of **hiding and protecting information** so only the right person can read it. It protects things like:
+
+- Your **passwords**
+- Your **private messages**
+- Sensitive **bank or personal data**
+
+In CTFs like **picoCTF**, many challenges are based on simple forms of cryptography. This guide will walk you through the basics.
 
 ---
 
-## Key Terms
+## 🔑 Key Terms (Super Important!)
 
-- **Encryption**  
-  Transforming readable text (**plaintext**) into scrambled text (**ciphertext**) using a key. Reversible with the correct key.
+- **Encryption** → Scrambling text with a *key* so that only the right person can unscramble it.  
+  (Plaintext → Ciphertext → back to Plaintext with a key)
 
-- **Encoding**  
-  Converting data into another format (Base64, ASCII, Morse). Not meant for secrecy.
+- **Encoding** → Just changing the format, not for secrecy (examples: Base64, ASCII, Morse).  
 
-- **Hashing**  
-  A one-way transformation into a fixed-length string (e.g., SHA-256, MD5). Used for integrity and passwords. Not reversible.
+- **Hashing** → A one-way transformation into a fixed-length code (e.g., SHA-256). Cannot be reversed.  
+  Used for **checking integrity** and storing passwords.
+
+💡 *Tip: Encoding ≠ Encryption ≠ Hashing. Don’t mix them up!*
 
 ---
 
 ## 1. Substitution Ciphers
 
-Substitution ciphers replace letters with other letters or symbols.
+Here, each letter is replaced with another.
+
+---
 
 ### 1.1 Caesar Cipher (Shift Cipher)
 
-Each letter is shifted by a fixed number in the alphabet.
-
-**Example (Shift = 3):**
+Shift each letter by a number.  
+Example (Shift = 3):
 
 ```
 Plaintext : ATTACK AT DAWN
 Ciphertext: DWWDFN DW GDZQ
 ```
 
-- Encrypt: shift forward by 3.  
-- Decrypt: shift backward by 3.  
+- Encryption → shift letters forward.  
+- Decryption → shift letters backward.  
 
-💡 **picoCTF tip**: Only 25 possible shifts. Brute force is easy.
+💡 *Only 25 possible shifts → brute force is easy.*
 
 ---
 
-### 1.2 ROT13 (Special Caesar Cipher)
+### 1.2 ROT13 (Caesar with shift = 13)
 
-A special case of Caesar cipher where the shift = 13.  
-Applying ROT13 twice gives back the original message.
+A special Caesar cipher with shift **13**.  
+If you apply ROT13 **twice**, you get the original text.
 
-**Example:**
+Example:  
+`HELLO` → `URYYB` → `HELLO`
 
-```
-Plaintext : FLAG
-Ciphertext: SYNT
-```
-
-💡 Often used to obfuscate text, but not secure.
+![ROT13 Example](https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/ROT13_table_with_example.svg/1024px-ROT13_table_with_example.svg.png)
 
 ---
 
 ### 1.3 Monoalphabetic Substitution
 
-Each letter is mapped to a different random letter. Stronger than Caesar, but still crackable with **frequency analysis**.
+Each letter is replaced with another **random letter**.
 
-**Example mapping:**
+Example mapping:
 
 ```
 Plain : ABCDEFGHIJKLMNOPQRSTUVWXYZ
 Cipher: QWERTYUIOPASDFGHJKLZXCVBNM
 ```
 
-**Plaintext**: DEFEND THE WALL  
-**Ciphertext**: RTYBRT ZIT VQKK
+Text: `DEFEND THE WALL`  
+Cipher: `RTYBRT ZIT VQKK`
+
+💡 *Weakness: Frequency analysis (letters like "E" appear a lot).*
 
 ---
 
 ### 1.4 Vigenère Cipher (Polyalphabetic Substitution)
 
-Uses multiple alphabets based on a **key word**.
+Instead of one alphabet, it uses multiple alphabets based on a **keyword**.
 
-**Example (Key = "KEY"):**
+Example:
 
 ```
-Plaintext : HELLO
-Key       : KEYKE
-Ciphertext: RIJVS
+Plaintext : BIMANDO
+Key       : LINUX
+Ciphertext: MQZUKOW
 ```
+![Vigenere cipher](https://linuxhint.com/wp-content/uploads/2023/12/image8-3.png)
 
-- H(7)+K(10) → R  
-- E(4)+E(4)  → I  
-- L(11)+Y(24)=35→ J (mod 26)  
-- L(11)+K(10)=21→ V  
-- O(14)+E(4)=18 → S  
-
-**Ciphertext**: `RIJVS`
-
-💡 Stronger than monoalphabetic, since same letters encrypt differently.
+💡 *Stronger than Caesar because same letter can encrypt differently.*
 
 ---
 
 ## 2. Transposition Ciphers
 
-Here, letters are not changed but **rearranged**.
+Here, we don’t change letters — we **rearrange them**.
+
+---
 
 ### 2.1 Rail Fence Cipher
 
-Message is written in zig-zag pattern across rails.
+Write message in zig-zag pattern on “rails”.
 
-**Example (3 rails):**
+Example: Message = `GeeksforGeeks`, Rails = 3
 
-```
-Plaintext : HELLOWORLD
-Rails:
-Rail 0: H . . . L . . . O . .
-Rail 1: . E . L . W . R . . D
-Rail 2: . . L . . O . . . . .
+Cipher = `GsGsekfrek eoe`
 
-Ciphertext: HOLELWRDLO
-```
+![Rail Fence Example](https://media.geeksforgeeks.org/wp-content/uploads/Untitled1.jpg)
 
 ---
 
 ### 2.2 Columnar Transposition Cipher
 
-Plaintext is written in rows under a keyword, then read column by column.
+Write text in rows under a keyword, then read column by column.
 
-**Example (Keyword = "HACK"):**
+Example with keyword `ZEBRA`:
 
-```
-Plaintext : DEFENDTHEWALL
-Keyword   : H A C K
-Order     : 3 1 2 4
-
-Grid:
-D E F E
-N D T H
-E W A L
-L X X X   (X = padding)
-```
-
-Read columns in order (A, C, H, K):
-
-```
-Ciphertext: EDWXFTAXDNELEHLX
-```
+![Columnar Transposition Example](https://media.geeksforgeeks.org/wp-content/uploads/columnar-transposition-cipher1.png)
 
 ---
 
 ## 3. Encoding Example: Morse Code
 
-Morse code represents letters as dots (`.`) and dashes (`-`).
+Morse code uses **dots (`.`) and dashes (`-`)**.
 
-**Examples:**
+Example:  
+`..-. .-.. .- --.` → `FLAG`
 
-```
-A → .-
-B → -...
-HELLO → .... . .-.. .-.. ---
-```
+![Morse code Example](https://www.wikihow.com/images/thumb/e/e5/453382-Summary.jpg/v4-460px-453382-Summary.jpg)
 
-**Decode** by mapping symbols back to letters.  
-
-💡 Note: Morse is **encoding, not encryption**.
+💡 *Remember: Encoding is not encryption.*
 
 ---
 
-## 4. Modern Cryptography Concepts
+## 4. Modern Cryptography Basics
+
+Now let’s peek at some real-world crypto ideas.
+
+---
 
 ### 4.1 Diffie–Hellman Key Exchange
 
-Allows two parties to agree on a shared secret over an insecure channel.
+Lets two people agree on a **shared secret key** without others knowing.
 
-**Example (small numbers):**
+Example (tiny numbers):
 
-- Public: `p = 23`, `g = 5`
-- Alice picks secret `a = 6` → A = 5^6 mod 23 = 8  
-- Bob picks secret `b = 15` → B = 5^15 mod 23 = 19  
-- Exchange A, B
+- Public: `p = 23`, `g = 5`  
+- Alice picks secret `a = 4` → sends `A = 5^4 mod 23 = 4`  
+- Bob picks secret `b = 3` → sends `B = 5^3 mod 23 = 10`  
+- They swap values.
 
-Shared secret:  
-- Alice: 19^6 mod 23 = 2  
-- Bob: 8^15 mod 23 = 2  
+Both compute the same shared key = **18** ✅
 
-Both share the key = **2**.
+![Diffie Hellman](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/DiffieHellman.png/800px-DiffieHellman.png)
 
 ---
 
-### 4.2 Modular Inversion
+### 4.2 Modular Inverse
 
-Find `x` such that:
+We want `x` such that:
 
 ```
 (a * x) ≡ 1 (mod m)
 ```
 
-**Example: Inverse of 7 mod 26**
+Example: Inverse of 7 mod 26 = 15  
+Because `7 * 15 = 105 ≡ 1 (mod 26)` ✅
 
-- Using Extended Euclidean Algorithm → inverse = 15  
-- Check: `7 * 15 = 105 ≡ 1 (mod 26)` ✅
-
-💡 Used in RSA and Affine ciphers.
+💡 Used in RSA and affine ciphers.
 
 ---
 
-## 5. Quick Practice Problems
+## 📝 Final Notes
 
-1. Caesar (Shift 5): `FLAG` → **KQFL**  
-2. ROT13: `PICO` → **CVPB**  
-3. Vigenère (Key = CAT): `ATTACKATDAWN` → **CTTCENCTTCTP**  
-4. Rail Fence (3 rails): `SECRETMESSAGE` → **SCSGERTMAESEE**  
-5. Columnar (Keyword ZEBRA): `WEAREDISCOVERED` → **EVLNEACDTXESEAOFEDEOR**  
-6. Morse: `..-. .-.. .- --.` → **FLAG**  
-7. Modular inverse: `3 mod 26` → **9**
+- **Substitution** → Replace letters (Caesar, ROT13, Vigenère).  
+- **Transposition** → Shuffle letters (Rail Fence, Columnar).  
+- **Encoding** → Just representation (Morse, Base64).  
+- **Modern** → Math-based (Diffie–Hellman, Modular Inverse).  
+
+💡 In picoCTF, always first ask:  
+👉 Is it **substitution, transposition, encoding, or hashing**?
 
 ---
-
-## Final Notes
-
-- **Substitution**: replace letters (Caesar, ROT13, Monoalphabetic, Vigenère).  
-- **Transposition**: shuffle letters (Rail Fence, Columnar).  
-- **Encoding**: representation (Morse).  
-- **Modern**: math-based (Diffie–Hellman, modular inverse).  
-
-💡 In picoCTF: always check whether you’re dealing with **substitution, transposition, encoding, or hashing**.
