@@ -8,7 +8,7 @@ tags: [picoctf, webexploitation,Medium]
 
 ## 🌍 Description:
 
-This challenge is all about **HTTP headers** and how websites use them to decide if you’re allowed in or not. Let’s solve it step by step in a **beginner-friendly way** 🚀  
+This challenge is all about [**Http headers**](https://bandarisgalaxy.github.io/h45h-g4l4xy.github.io/posts/Headers_cheatsheet/) and how websites use them to decide if you’re allowed in or not. Let’s solve it step by step in a **beginner-friendly way** 🚀
 
 ---
 
