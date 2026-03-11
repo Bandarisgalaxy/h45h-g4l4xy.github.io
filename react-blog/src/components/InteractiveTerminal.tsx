@@ -110,6 +110,7 @@ export default function InteractiveTerminal() {
   const bootStarted = useRef(false); // prevent double-boot on re-render
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const terminalRef = useRef<HTMLDivElement>(null); // outer wrapper — used for scrollIntoView
 
   // ── Blinking cursor ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -157,18 +158,35 @@ export default function InteractiveTerminal() {
     };
   }, []);
 
-  // ── Auto-scroll inside terminal only ─────────────────────────────────────
+  // ── Auto-scroll inside terminal + bring terminal into viewport ─────────────
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+    // After command output, scroll terminal to top of viewport so the user
+    // can read results (especially important on mobile where keyboard hides content)
+    if (interactive) {
+      setTimeout(() => {
+        terminalRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 80);
+    }
   }, [lines, interactive]);
 
-  // preventScroll stops mobile browsers from jumping to the off-screen input
-  const focusInput = useCallback(
-    () => inputRef.current?.focus({ preventScroll: true }),
-    [],
-  );
+  // preventScroll stops mobile browsers from jumping to the off-screen input.
+  // After focus, wait 350ms for the keyboard animation then scroll terminal
+  // to the top of the visible area so it isn't hidden behind the keyboard.
+  const focusInput = useCallback(() => {
+    inputRef.current?.focus({ preventScroll: true });
+    setTimeout(() => {
+      terminalRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 350);
+  }, []);
 
   // ── Process command ───────────────────────────────────────────────────────
   const runCommand = useCallback(
@@ -301,6 +319,7 @@ export default function InteractiveTerminal() {
 
   return (
     <div
+      ref={terminalRef}
       className="relative rounded-lg overflow-hidden w-full font-mono text-sm flex flex-col"
       style={{
         minHeight: 340,
