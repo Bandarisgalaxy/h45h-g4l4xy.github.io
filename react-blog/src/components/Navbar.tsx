@@ -68,7 +68,8 @@ export default function Navbar() {
           <ThemeToggle />
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="text-[var(--neon)] p-2 rounded hover:bg-[var(--neon)]/10 transition-colors"
+            className="text-[var(--neon)] p-3 rounded hover:bg-[var(--neon)]/10 active:bg-[var(--neon)]/20 transition-colors touch-manipulation"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
           >
             {menuOpen ? (
               <X className="w-5 h-5" />
@@ -79,14 +80,18 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — uses opacity+translateY (GPU composited).
+          height:0→auto animations are unreliable on mobile Safari. */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[var(--bg)]/95 border-b border-[var(--border)] overflow-hidden"
+            key="mobile-menu"
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="md:hidden border-b border-[var(--border)] backdrop-blur-lg"
+            style={{ background: "rgba(10,10,10,0.92)" }}
           >
             <div className="px-4 py-4 space-y-1">
               {NAV_ITEMS.map((item) => (
@@ -94,7 +99,7 @@ export default function Navbar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMenuOpen(false)}
-                  className={`block px-4 py-2 rounded text-sm transition-colors ${
+                  className={`block px-4 py-3 rounded text-sm transition-colors touch-manipulation ${
                     pathname === item.href
                       ? "text-[var(--neon)] bg-[var(--neon)]/10"
                       : "text-[var(--muted)] hover:text-[var(--neon)] hover:bg-[var(--neon)]/5"

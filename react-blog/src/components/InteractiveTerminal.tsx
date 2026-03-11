@@ -348,20 +348,37 @@ export default function InteractiveTerminal() {
 
         {/* Interactive prompt row */}
         {interactive && (
-          <div className="flex items-center mt-1">
+          <div className="flex items-center mt-1 gap-1">
             <span
               className="flex-shrink-0 select-none"
               style={{ color: "#2255cc" }}
             >
               h45h@cyberlab:~${" "}
             </span>
-            <span style={{ color: "#ffffff" }}>{inputVal}</span>
+            <span style={{ color: "#ffffff", flex: 1 }}>{inputVal}</span>
             <span
               className="ml-0.5 select-none"
               style={{ opacity: cursorBlink ? 1 : 0, color: "#00ff41" }}
             >
               █
             </span>
+            {/* Mobile run button — visible only on touch devices */}
+            <button
+              className="md:hidden flex-shrink-0 ml-2 px-2 py-0.5 rounded text-xs font-bold select-none"
+              style={{
+                color: "#00ff41",
+                border: "1px solid #00ff4155",
+                background: "rgba(0,255,65,0.08)",
+              }}
+              onPointerDown={(e) => {
+                e.preventDefault(); // prevent blur on input
+                runCommand(inputVal);
+                setInputVal("");
+              }}
+              aria-label="Run command"
+            >
+              ▶
+            </button>
           </div>
         )}
 
@@ -376,20 +393,20 @@ export default function InteractiveTerminal() {
         )}
       </div>
 
-      {/* Hidden real input — wrapped in a form so mobile "Go"/"Done"
-          keyboard button fires onSubmit (not just onKeyDown) */}
+      {/* Hidden real input. Wrapped in a form so both desktop Enter (keydown)
+          and mobile keyboard submit button (onSubmit) execute commands. */}
       {interactive && (
         <form
           onSubmit={(e) => {
-            e.preventDefault(); // prevents page scroll/navigation on mobile
+            e.preventDefault();
             runCommand(inputVal);
             setInputVal("");
           }}
           style={{
             position: "absolute",
-            opacity: 0,
-            pointerEvents: "none",
+            width: 0,
             height: 0,
+            overflow: "hidden",
           }}
         >
           <input
