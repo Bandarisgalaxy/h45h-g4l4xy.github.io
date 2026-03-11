@@ -7,14 +7,13 @@ import rehypeRaw from "rehype-raw";
 import { useEffect, useRef, memo, useCallback } from "react";
 import "highlight.js/styles/github-dark.css";
 
-// Prefix image paths from markdown with the GitHub Pages basePath.
-// Markdown authors write "/images/foo.png"; on GitHub Pages the actual URL
-// must be "/h45h-g4l4xy.github.io/images/foo.png".
+// Prefix /images/... paths with the GitHub Pages basePath.
+// NEXT_PUBLIC_BASE_PATH is injected at build time from next.config.js.
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 function resolveImageSrc(src?: string): string | undefined {
-  if (!src) return src;
-  // Only prefix absolute paths that start with "/" (not "http" or "//")
+  if (!src) return undefined;
+  // Prefix root-relative paths (e.g. /images/foo.png → /h45h-g4l4xy.github.io/images/foo.png)
   if (src.startsWith("/") && !src.startsWith("//")) {
     return `${BASE_PATH}${src}`;
   }
@@ -25,49 +24,24 @@ interface Props {
   content: string;
 }
 
-// Memoized image component with lazy loading + basePath-aware src resolution
+// Simplified image component — native loading="lazy" is reliable cross-platform.
 const LazyImage = memo(({ src, alt }: { src?: string; alt?: string }) => {
-  const resolvedSrc = resolveImageSrc(src);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const finalSrc = resolveImageSrc(src);
 
-  useEffect(() => {
-    if (!imgRef.current || !resolvedSrc) return;
-
-    // Native lazy loading
-    imgRef.current.loading = "lazy";
-
-    // Intersection Observer for more control
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && imgRef.current) {
-            imgRef.current.src = resolvedSrc;
-            observer.disconnect();
-          }
-        });
-      },
-      { rootMargin: "50px" },
-    );
-
-    observer.observe(imgRef.current);
-
-    return () => observer.disconnect();
-  }, [resolvedSrc]);
+  if (!finalSrc) return null;
 
   return (
     <figure className="my-6">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        ref={imgRef}
-        data-src={resolvedSrc}
+        src={finalSrc}
         alt={alt || ""}
         className="rounded-lg border border-[var(--border)] w-full"
         loading="lazy"
         decoding="async"
-        style={{ contentVisibility: "auto" }}
       />
       {alt && (
-        <figcaption className="text-center text-xs text-[var(--text-muted)] mt-2">
+        <figcaption className="text-center text-xs text-[var(--text-muted)] mt-2 italic">
           {alt}
         </figcaption>
       )}
@@ -79,7 +53,7 @@ LazyImage.displayName = "LazyImage";
 
 // Table component
 const TableWrapper = ({ children }: { children?: React.ReactNode }) => (
-  <div className="overflow-x-auto my-6" style={{ contentVisibility: "auto" }}>
+  <div className="overflow-x-auto my-6">
     <table className="min-w-full">{children}</table>
   </div>
 );
@@ -94,7 +68,6 @@ const BlockquoteWrapper = ({ children }: { children?: React.ReactNode }) => (
 function MarkdownRenderer({ content }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
-  // Memoize the copy button handler
   const addCopyButtons = useCallback(() => {
     if (!ref.current) return;
     const pres = ref.current.querySelectorAll("pre");
@@ -125,9 +98,9 @@ function MarkdownRenderer({ content }: Props) {
   }, [content, addCopyButtons]);
 
   return (
-    // suppressHydrationWarning: rehypeHighlight / rehypeRaw can produce
-    // minor token-level differences between Node.js (build) and browser
-    // (runtime). This suppresses the warning without affecting functionality.
+    // suppressHydrationWarning: rehypeHighlight can produce minor differences
+    // between Node.js build output and browser runtime — this suppresses the
+    // warning without affecting rendered output or functionality.
     <div ref={ref} className="prose" suppressHydrationWarning>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
@@ -135,7 +108,6 @@ function MarkdownRenderer({ content }: Props) {
         components={{
           table: TableWrapper,
           blockquote: BlockquoteWrapper,
-          // Custom heading anchors
           h2: ({ children, id }) => (
             <h2 id={id} className="group flex items-center gap-2">
               <span className="text-[var(--muted)]">#</span>
@@ -165,5 +137,4 @@ function MarkdownRenderer({ content }: Props) {
   );
 }
 
-// Export memoized version
 export default memo(MarkdownRenderer);

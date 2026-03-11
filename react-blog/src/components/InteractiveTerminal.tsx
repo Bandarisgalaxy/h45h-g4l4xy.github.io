@@ -376,20 +376,35 @@ export default function InteractiveTerminal() {
         )}
       </div>
 
-      {/* Hidden real input */}
+      {/* Hidden real input — wrapped in a form so mobile "Go"/"Done"
+          keyboard button fires onSubmit (not just onKeyDown) */}
       {interactive && (
-        <input
-          ref={inputRef}
-          value={inputVal}
-          onChange={(e) => setInputVal(e.target.value)}
-          onKeyDown={onKeyDown}
-          className="sr-only"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          aria-label="Terminal input"
-        />
+        <form
+          onSubmit={(e) => {
+            e.preventDefault(); // prevents page scroll/navigation on mobile
+            runCommand(inputVal);
+            setInputVal("");
+          }}
+          style={{
+            position: "absolute",
+            opacity: 0,
+            pointerEvents: "none",
+            height: 0,
+          }}
+        >
+          <input
+            ref={inputRef}
+            value={inputVal}
+            onChange={(e) => setInputVal(e.target.value)}
+            onKeyDown={onKeyDown}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            enterKeyHint="send"
+            aria-label="Terminal input"
+          />
+        </form>
       )}
     </div>
   );
