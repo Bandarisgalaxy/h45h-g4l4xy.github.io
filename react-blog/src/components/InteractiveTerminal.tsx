@@ -393,8 +393,9 @@ export default function InteractiveTerminal() {
         )}
       </div>
 
-      {/* Hidden real input. Wrapped in a form so both desktop Enter (keydown)
-          and mobile keyboard submit button (onSubmit) execute commands. */}
+      {/* Hidden real input. Off-screen (NOT zero-size) — width:0/height:0
+          causes browsers to put the cursor at pos 0, reversing typed text.
+          position:fixed left:-9999px keeps natural width → correct cursor. */}
       {interactive && (
         <form
           onSubmit={(e) => {
@@ -403,10 +404,11 @@ export default function InteractiveTerminal() {
             setInputVal("");
           }}
           style={{
-            position: "absolute",
-            width: 0,
-            height: 0,
-            overflow: "hidden",
+            position: "fixed",
+            left: "-9999px",
+            top: "-9999px",
+            opacity: 0,
+            pointerEvents: "none",
           }}
         >
           <input
