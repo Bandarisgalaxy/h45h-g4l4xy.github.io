@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Search, X } from "lucide-react";
+import Link from "next/link";
 import type { PostMeta } from "@/types/post";
-import BlogCard from "./BlogCard";
 
 export default function SearchBar({ posts }: { posts: PostMeta[] }) {
   const [query, setQuery] = useState("");
@@ -39,11 +39,12 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 200)}
           placeholder="Search posts, tags, categories..."
-          className="search-input w-full border rounded-lg pl-10 pr-10 py-3 outline-none transition-all duration-200 text-sm font-mono"
+          className="w-full border rounded-lg pl-10 pr-10 py-3 outline-none transition-all duration-200 text-sm font-mono"
           style={{
             background: "var(--card)",
             color: "var(--text)",
-            borderColor: "var(--border)",
+            borderColor: focused ? "var(--neon)" : "var(--border)",
+            boxShadow: focused ? "0 0 0 1px var(--neon-glow)" : "none",
           }}
         />
         {query && (
@@ -57,10 +58,10 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
         )}
       </div>
 
-      {/* Results dropdown */}
+      {/* Results dropdown — uses Next.js Link so basePath is auto-prepended */}
       {focused && results.length > 0 && (
         <div
-          className="search-dropdown absolute top-full left-0 right-0 mt-2 border rounded-lg overflow-hidden z-40 max-h-96 overflow-y-auto"
+          className="absolute top-full left-0 right-0 mt-2 border rounded-lg overflow-hidden z-40 max-h-96 overflow-y-auto"
           style={{
             background: "var(--card)",
             borderColor: "var(--border)",
@@ -68,20 +69,20 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
           }}
         >
           {results.map((post) => (
-            <a
+            <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
               className="block px-4 py-3 border-b last:border-0 transition-colors hover:bg-[var(--card-hover)]"
               style={{ borderColor: "var(--border)" }}
             >
               <div
-                className="search-result-title text-sm font-medium"
+                className="text-sm font-medium"
                 style={{ color: "var(--text)" }}
               >
                 {post.title}
               </div>
               <div
-                className="search-result-excerpt text-xs mt-0.5 line-clamp-1"
+                className="text-xs mt-0.5 line-clamp-1"
                 style={{ color: "var(--muted)" }}
               >
                 {post.excerpt}
@@ -97,7 +98,7 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
                   </span>
                 ))}
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       )}

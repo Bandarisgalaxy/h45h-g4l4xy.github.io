@@ -163,10 +163,29 @@ pre {
   border-radius: 8px;
   padding: 1.25rem 1.5rem !important;
   overflow-x: auto;
-  font-size: 0.85rem;
+  font-size: 0.92rem; /* bumped up from 0.85rem */
   margin: 1.5rem 0;
   font-family: 'Roboto Mono', monospace;
-  line-height: 1.7;
+  line-height: 1.75;
+  /* Thin, subtle horizontal scrollbar — not a dominant thick bar */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(0, 255, 65, 0.2) transparent;
+}
+
+/* Chrome/Edge: hairline scrollbar inside code blocks only */
+pre::-webkit-scrollbar {
+  height: 3px; /* horizontal bar height */
+  width: 3px;
+}
+pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+pre::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 65, 0.2);
+  border-radius: 2px;
+}
+pre::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 65, 0.45);
 }
 
 pre:hover .copy-btn {
