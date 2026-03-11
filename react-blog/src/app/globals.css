@@ -1,0 +1,476 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+/* Roboto Mono is the sole font — applied to everything via body, code, and prose */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ══════════════════════════════════════════════════════════════
+   CSS Custom Properties — dark mode (default)
+══════════════════════════════════════════════════════════════ */
+:root,
+html.dark {
+  --neon: #00ff41;
+  --neon-dim: #00cc33;
+  --neon-glow: rgba(0, 255, 65, 0.25);
+  --bg: #0a0a0a;
+  --bg-alt: #050505;
+  --card: #111111;
+  --card-hover: #161616;
+  --border: #1a2a1a;
+  --border-glow: rgba(0, 255, 65, 0.15);
+  --text: #ccffcc;
+  --text-muted: #aaccaa;
+  --muted: #4a7c4a;
+  --muted-dim: #3a5c3a;
+  --code-bg: #0d1117;
+  --code-border: rgba(0, 255, 65, 0.2);
+  /* Terminal-specific */
+  --term-bg: #050505;
+  --term-title-bg: #0d0d0d;
+  --term-border: #1a2a1a;
+  --term-text: #88cc88;
+  --term-cmd: #ccffcc;
+  --term-prompt: #00ff41;
+  --term-muted: #4a7c4a;
+}
+
+/* light theme removed — dark only */
+
+/* ══════════════════════════════════════════════════════════════
+   Base reset
+══════════════════════════════════════════════════════════════ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  /* Performance optimizations */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Roboto Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  /* NOTE: Do NOT add transform/will-change/backface-visibility here —
+     CSS transforms on body break position:fixed children (custom cursor). */
+}
+
+/* Hide default cursor — replaced by CustomCursor component */
+* {
+  cursor: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Text selection
+══════════════════════════════════════════════════════════════ */
+::selection {
+  background-color: var(--neon);
+  color: #000;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Scrollbar
+══════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-alt);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--neon-dim);
+  border-radius: 3px;
+  opacity: 0.6;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Utility classes
+══════════════════════════════════════════════════════════════ */
+.neon-text {
+  color: var(--neon);
+  text-shadow:
+    0 0 10px var(--neon),
+    0 0 20px var(--neon-glow);
+}
+
+.neon-border {
+  border: 1px solid var(--neon);
+  box-shadow:
+    0 0 8px var(--neon-glow),
+    inset 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* CRT scanline overlay (apply .crt to a container) */
+.crt::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Blinking cursor helper */
+.type-cursor::after {
+  content: '█';
+  animation: blink 0.9s step-end infinite;
+  color: var(--neon);
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Code blocks
+══════════════════════════════════════════════════════════════ */
+pre {
+  position: relative;
+  background: var(--code-bg) !important;
+  border: 1px solid var(--code-border);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem !important;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  margin: 1.5rem 0;
+  font-family: 'Roboto Mono', monospace;
+  line-height: 1.7;
+}
+
+pre:hover .copy-btn {
+  opacity: 1;
+}
+
+code {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.875em;
+}
+
+:not(pre) > code {
+  background: var(--neon-glow);
+  border: 1px solid var(--code-border);
+  border-radius: 4px;
+  padding: 0.15em 0.45em;
+  color: var(--neon);
+  font-size: 0.875em;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Prose — blog post content
+══════════════════════════════════════════════════════════════ */
+.prose {
+  color: var(--text);
+  max-width: 72ch;
+  line-height: 2;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5 {
+  color: var(--neon);
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 700;
+  margin-top: 2.25rem;
+  margin-bottom: 0.85rem;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+}
+
+.prose h1 {
+  font-size: 2rem;
+}
+.prose h2 {
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.4rem;
+}
+.prose h3 {
+  font-size: 1.25rem;
+}
+.prose h4 {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
+.prose p {
+  margin-bottom: 1.25rem;
+  color: var(--text);
+}
+
+.prose a {
+  color: var(--neon);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--neon-glow);
+  transition: text-shadow 0.2s;
+}
+.prose a:hover {
+  text-shadow: 0 0 8px var(--neon);
+  text-decoration-color: var(--neon);
+}
+
+/* Bold text: red with white highlight — stands out clearly */
+.prose strong {
+  color: #dc2626;
+  font-weight: 700;
+  background: #ffffff;
+  padding: 0.08em 0.4em;
+  border-radius: 3px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+html.dark .prose strong {
+  color: #ff4444;
+  background: rgba(255, 255, 255, 0.93);
+}
+.prose em {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.prose blockquote {
+  border-left: 3px solid var(--neon);
+  padding: 0.6rem 1rem;
+  margin: 1.5rem 0;
+  color: var(--muted);
+  font-style: italic;
+  background: var(--neon-glow);
+  border-radius: 0 6px 6px 0;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+  color: var(--text);
+}
+.prose li {
+  margin-bottom: 0.4rem;
+}
+.prose ul > li::marker {
+  color: var(--neon);
+}
+.prose ol > li::marker {
+  color: var(--neon);
+}
+
+/* Tables */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+  overflow: hidden;
+  border-radius: 8px;
+  display: block;
+  overflow-x: auto;
+}
+.prose th {
+  background: var(--neon-glow);
+  color: var(--neon);
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border);
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.prose td {
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+}
+.prose tr:nth-child(even) td {
+  background: rgba(0, 255, 65, 0.025);
+}
+
+.prose img {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  max-width: 100%;
+  margin: 1.5rem auto;
+  display: block;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+/* Quote bar fade animation */
+@keyframes quoteFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.quote-fade {
+  animation: quoteFadeIn 0.7s ease forwards;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Animated grid background (optional class)
+══════════════════════════════════════════════════════════════ */
+.cyber-grid {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Performance Optimizations
+══════════════════════════════════════════════════════════════ */
+
+/* Hardware acceleration for smooth animations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Optimize rendering for animated elements */
+[class*='motion-'] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+/* Optimize images for lazy loading */
+img {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 500px;
+}
+
+/* Reduce paint on scroll */
+.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Optimize table rendering */
+table {
+  contain-intrinsic-size: auto 500px;
+  content-visibility: auto;
+}
+
+/* Optimize long code blocks */
+pre {
+  contain-intrinsic-size: auto 300px;
+  content-visibility: auto;
+}
+
+/* GPU acceleration for transforms */
+.gpu-accelerated {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   First-visit content hiding — prevents flash while loader runs.
+   The inline script in layout.tsx sets data-first-visit on <html>
+   synchronously before React hydrates. The loader removes it when done.
+══════════════════════════════════════════════════════════════ */
+html[data-first-visit] [data-page-content] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Cyber loader scan line
+══════════════════════════════════════════════════════════════ */
+.cyber-scanline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 255, 65, 0.6) 40%,
+    rgba(0, 204, 255, 0.8) 50%,
+    rgba(0, 255, 65, 0.6) 60%,
+    transparent 100%
+  );
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.5);
+  animation: scanDown 2.4s linear infinite;
+  will-change: transform;
+}
+
+@keyframes scanDown {
+  0% {
+    transform: translateY(0);
+    opacity: 0.8;
+  }
+  95% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Cyber loader cursor blink (block cursor)
+══════════════════════════════════════════════════════════════ */
+.cyber-cursor-blink {
+  animation: cyberBlink 0.75s step-end infinite;
+}
+
+@keyframes cyberBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}

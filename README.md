@@ -1,43 +1,114 @@
-# Chirpy Starter
+# H45H G4L4XY Blog
 
-[![Gem Version](https://img.shields.io/gem/v/jekyll-theme-chirpy)][gem]&nbsp;
-[![GitHub license](https://img.shields.io/github/license/cotes2020/chirpy-starter.svg?color=blue)][mit]
+A modern cybersecurity blog built with Next.js, React, and TypeScript. Features CTF writeups, tutorials, and security research.
 
-When installing the [**Chirpy**][chirpy] theme through [RubyGems.org][gem], Jekyll can only read files in the folders
-`_data`, `_layouts`, `_includes`, `_sass` and `assets`, as well as a small part of options of the `_config.yml` file
-from the theme's gem. If you have ever installed this theme gem, you can use the command
-`bundle info --path jekyll-theme-chirpy` to locate these files.
+[![Deploy to GitHub Pages](https://github.com/h45h-g4l4xy/h45h-g4l4xy.github.io/actions/workflows/deploy-react.yml/badge.svg)](https://github.com/h45h-g4l4xy/h45h-g4l4xy.github.io/actions/workflows/deploy-react.yml)
 
-The Jekyll team claims that this is to leave the ball in the user’s court, but this also results in users not being
-able to enjoy the out-of-the-box experience when using feature-rich themes.
+## 🚀 Quick Start
 
-To fully use all the features of **Chirpy**, you need to copy the other critical files from the theme's gem to your
-Jekyll site. The following is a list of targets:
+### Prerequisites
 
-```shell
-.
-├── _config.yml
-├── _plugins
-├── _tabs
-└── index.html
+- Node.js 18+ 
+- npm or yarn
+
+### Local Development
+
+```bash
+cd react-blog
+npm install
+npm run dev
 ```
 
-To save you time, and also in case you lose some files while copying, we extract those files/configurations of the
-latest version of the **Chirpy** theme and the [CD][CD] workflow to here, so that you can start writing in minutes.
+Visit `http://localhost:3000` to see your blog.
 
-## Usage
+### Building for Production
 
-Check out the [theme's docs](https://github.com/cotes2020/jekyll-theme-chirpy/wiki).
+```bash
+cd react-blog
+npm run build
+```
 
-## Contributing
+This generates a static site in the `out/` directory.
 
-This repository is automatically updated with new releases from the theme repository. If you encounter any issues or want to contribute to its improvement, please visit the [theme repository][chirpy] to provide feedback.
+## 📁 Project Structure
 
-## License
+```
+react-blog/
+├── public/          # Static assets
+│   └── images/      # Blog post images
+├── src/
+│   ├── app/         # Next.js App Router pages
+│   ├── components/  # React components
+│   ├── lib/         # Utilities and helpers
+│   └── types/       # TypeScript types
+├── _posts/          # Markdown blog posts
+├── next.config.js   # Next.js configuration
+└── package.json
+```
 
-This work is published under [MIT][mit] License.
+## ✍️ Writing Posts
 
-[gem]: https://rubygems.org/gems/jekyll-theme-chirpy
-[chirpy]: https://github.com/cotes2020/jekyll-theme-chirpy/
-[CD]: https://en.wikipedia.org/wiki/Continuous_deployment
-[mit]: https://github.com/cotes2020/chirpy-starter/blob/master/LICENSE
+Create a new markdown file in `react-blog/_posts/` with frontmatter:
+
+```markdown
+---
+title: "Your Post Title"
+date: 2026-03-11
+categories: [Category1, Category2]
+tags: [tag1, tag2, tag3]
+author: Your Name
+description: A brief description
+---
+
+Your content here...
+```
+
+## 🎨 Features
+
+- ✅ Static site generation with Next.js
+- ✅ Markdown blog posts with frontmatter
+- ✅ Syntax highlighting for code blocks
+- ✅ Math equations with KaTeX
+- ✅ Responsive design
+- ✅ Dark theme optimized for cybersecurity content
+- ✅ Category and tag filtering
+- ✅ Full-text search
+- ✅ Reading time estimates
+- ✅ Table of contents
+- ✅ Related posts
+
+## 🚢 Deployment
+
+The site automatically deploys to GitHub Pages when you push to the `main` branch.
+
+The deployment workflow:
+1. Builds the Next.js site as a static export
+2. Uploads to GitHub Pages
+3. Site is live at your GitHub Pages URL
+
+### Manual Deployment
+
+If needed, you can trigger a manual deployment from the GitHub Actions tab.
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 14
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Markdown**: react-markdown, remark-gfm
+- **Syntax Highlighting**: highlight.js
+- **Math**: KaTeX
+- **Icons**: Lucide React
+- **Deployment**: GitHub Pages
+
+## 📝 Notes
+
+This project was migrated from Jekyll (Chirpy theme) to Next.js. Old Jekyll files are kept in the root directory for reference but are no longer used in production.
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+**Made with ☕ and 💻 by Harshith**

@@ -1,27 +1,55 @@
-# Bundler cache
-.bundle
-vendor
-Gemfile.lock
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
-# Jekyll cache
-.jekyll-cache
-.jekyll-metadata
-_site
+# Next.js
+.next/
+out/
+build/
+dist/
 
-# RubyGems
-*.gem
+# Production
+/build
 
-# NPM dependencies
-node_modules
-package-lock.json
+# Environment Variables
+.env
+.env*.local
+.env.production
 
-# IDE configurations
-.idea
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
 !.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
 
-# Misc
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Old Jekyll files (keeping for reference during migration)
+.bundle
+vendor
+Gemfile.lock
+.jekyll-cache
+.jekyll-metadata
+_site
+*.gem
 _sass/vendors
 assets/js/dist
