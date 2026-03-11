@@ -5,10 +5,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // For GitHub Pages deployment at root domain (bandarisgalaxy.github.io)
-  // If deploying to a subdirectory, set basePath: '/repo-name'
-  basePath: '',
-  assetPrefix: '',
+  // Repo is "h45h-g4l4xy.github.io" under username "bandarisgalaxy"
+  // → GitHub Pages serves it at: bandarisgalaxy.github.io/h45h-g4l4xy.github.io/
+  basePath: '/h45h-g4l4xy.github.io',
+  assetPrefix: '/h45h-g4l4xy.github.io',
 };
 
 module.exports = nextConfig;
