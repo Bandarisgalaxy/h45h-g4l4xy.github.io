@@ -110,8 +110,6 @@ export default function InteractiveTerminal() {
   const bootStarted = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const terminalRef = useRef<HTMLDivElement>(null);
-  const [keyboardUp, setKeyboardUp] = useState(false);
 
   // ── Blinking cursor ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -159,39 +157,14 @@ export default function InteractiveTerminal() {
     };
   }, []);
 
-  // ── Auto-scroll inside terminal ──────────────────────────────────────────
+  // ── Auto-scroll inside terminal box only (not the page) ───────────────────
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [lines, interactive]);
 
-  // ── Mobile keyboard detection via visualViewport ─────────────────────────
-  // When the soft keyboard opens the visualViewport height shrinks.
-  // We set keyboardUp=true only on narrow screens (mobile) so the terminal
-  // can be pinned to the top. Desktop is completely unaffected.
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return; // older browsers — skip
-
-    const fullHeight = window.innerHeight;
-
-    const onResize = () => {
-      const isMobile = window.innerWidth <= 768;
-      if (!isMobile) {
-        setKeyboardUp(false);
-        return;
-      }
-      // If viewport is significantly shorter than window, keyboard is up
-      const up = vv.height < fullHeight * 0.75;
-      setKeyboardUp(up);
-    };
-
-    vv.addEventListener("resize", onResize);
-    return () => vv.removeEventListener("resize", onResize);
-  }, []);
-
-  // preventScroll stops mobile browsers from jumping to the off-screen input
+  // Focus hidden input without moving the page at all
   const focusInput = useCallback(() => {
     inputRef.current?.focus({ preventScroll: true });
   }, []);
@@ -327,27 +300,14 @@ export default function InteractiveTerminal() {
 
   return (
     <div
-      ref={terminalRef}
       className="relative rounded-lg overflow-hidden w-full font-mono text-sm flex flex-col"
       style={{
         minHeight: 340,
-        maxHeight: keyboardUp ? "70vh" : 420,
+        maxHeight: 420,
         background: "#050505",
         border: "1px solid #1a2a1a",
         boxShadow:
           "0 0 30px rgba(0,255,65,0.08), inset 0 0 30px rgba(0,0,0,0.4)",
-        // Mobile only: pin terminal to top of screen when keyboard is up
-        ...(keyboardUp
-          ? {
-              position: "fixed" as const,
-              top: 0,
-              left: 0,
-              right: 0,
-              zIndex: 9999,
-              borderRadius: 0,
-              maxHeight: "60vh",
-            }
-          : {}),
       }}
       onClick={focusInput}
     >
