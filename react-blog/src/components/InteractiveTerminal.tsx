@@ -107,10 +107,11 @@ export default function InteractiveTerminal() {
   const [histIdx, setHistIdx] = useState(-1);
   const [interactive, setInteractive] = useState(false);
   const [cursorBlink, setCursorBlink] = useState(true);
-  const bootStarted = useRef(false); // prevent double-boot on re-render
+  const bootStarted = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const terminalRef = useRef<HTMLDivElement>(null); // outer wrapper — used for scrollIntoView
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const [keyboardUp, setKeyboardUp] = useState(false);
 
   // ── Blinking cursor ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -158,34 +159,41 @@ export default function InteractiveTerminal() {
     };
   }, []);
 
-  // ── Auto-scroll inside terminal + bring terminal into viewport ─────────────
+  // ── Auto-scroll inside terminal ──────────────────────────────────────────
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-    // After command output, scroll terminal to top of viewport so the user
-    // can read results (especially important on mobile where keyboard hides content)
-    if (interactive) {
-      setTimeout(() => {
-        terminalRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }, 80);
-    }
   }, [lines, interactive]);
 
-  // preventScroll stops mobile browsers from jumping to the off-screen input.
-  // After focus, wait 350ms for the keyboard animation then scroll terminal
-  // to the top of the visible area so it isn't hidden behind the keyboard.
+  // ── Mobile keyboard detection via visualViewport ─────────────────────────
+  // When the soft keyboard opens the visualViewport height shrinks.
+  // We set keyboardUp=true only on narrow screens (mobile) so the terminal
+  // can be pinned to the top. Desktop is completely unaffected.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return; // older browsers — skip
+
+    const fullHeight = window.innerHeight;
+
+    const onResize = () => {
+      const isMobile = window.innerWidth <= 768;
+      if (!isMobile) {
+        setKeyboardUp(false);
+        return;
+      }
+      // If viewport is significantly shorter than window, keyboard is up
+      const up = vv.height < fullHeight * 0.75;
+      setKeyboardUp(up);
+    };
+
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
+
+  // preventScroll stops mobile browsers from jumping to the off-screen input
   const focusInput = useCallback(() => {
     inputRef.current?.focus({ preventScroll: true });
-    setTimeout(() => {
-      terminalRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 350);
   }, []);
 
   // ── Process command ───────────────────────────────────────────────────────
@@ -323,11 +331,23 @@ export default function InteractiveTerminal() {
       className="relative rounded-lg overflow-hidden w-full font-mono text-sm flex flex-col"
       style={{
         minHeight: 340,
-        maxHeight: 420,
+        maxHeight: keyboardUp ? "70vh" : 420,
         background: "#050505",
         border: "1px solid #1a2a1a",
         boxShadow:
           "0 0 30px rgba(0,255,65,0.08), inset 0 0 30px rgba(0,0,0,0.4)",
+        // Mobile only: pin terminal to top of screen when keyboard is up
+        ...(keyboardUp
+          ? {
+              position: "fixed" as const,
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 9999,
+              borderRadius: 0,
+              maxHeight: "60vh",
+            }
+          : {}),
       }}
       onClick={focusInput}
     >
