@@ -164,7 +164,11 @@ export default function InteractiveTerminal() {
     }
   }, [lines, interactive]);
 
-  const focusInput = useCallback(() => inputRef.current?.focus(), []);
+  // preventScroll stops mobile browsers from jumping to the off-screen input
+  const focusInput = useCallback(
+    () => inputRef.current?.focus({ preventScroll: true }),
+    [],
+  );
 
   // ── Process command ───────────────────────────────────────────────────────
   const runCommand = useCallback(
@@ -348,21 +352,26 @@ export default function InteractiveTerminal() {
 
         {/* Interactive prompt row */}
         {interactive && (
-          <div className="flex items-center mt-1 gap-1">
-            <span
-              className="flex-shrink-0 select-none"
-              style={{ color: "#2255cc" }}
-            >
-              h45h@cyberlab:~${" "}
-            </span>
-            <span style={{ color: "#ffffff", flex: 1 }}>{inputVal}</span>
-            <span
-              className="ml-0.5 select-none"
-              style={{ opacity: cursorBlink ? 1 : 0, color: "#00ff41" }}
-            >
-              █
-            </span>
-            {/* Mobile run button — visible only on touch devices */}
+          <div className="flex items-center mt-1">
+            {/* prompt + typed text + cursor — all inline, cursor hugs the text */}
+            <div className="flex items-center flex-1 min-w-0 overflow-hidden">
+              <span
+                className="flex-shrink-0 select-none whitespace-nowrap"
+                style={{ color: "#2255cc" }}
+              >
+                h45h@cyberlab:~${" "}
+              </span>
+              <span className="whitespace-pre" style={{ color: "#ffffff" }}>
+                {inputVal}
+              </span>
+              <span
+                className="flex-shrink-0 select-none"
+                style={{ opacity: cursorBlink ? 1 : 0, color: "#00ff41" }}
+              >
+                &#x2588;
+              </span>
+            </div>
+            {/* Mobile run button — always on the right */}
             <button
               className="md:hidden flex-shrink-0 ml-2 px-2 py-0.5 rounded text-xs font-bold select-none"
               style={{
@@ -371,13 +380,13 @@ export default function InteractiveTerminal() {
                 background: "rgba(0,255,65,0.08)",
               }}
               onPointerDown={(e) => {
-                e.preventDefault(); // prevent blur on input
+                e.preventDefault();
                 runCommand(inputVal);
                 setInputVal("");
               }}
               aria-label="Run command"
             >
-              ▶
+              &#x25b6;
             </button>
           </div>
         )}
