@@ -7,16 +7,31 @@ import rehypeRaw from "rehype-raw";
 import { useEffect, useRef, memo, useCallback } from "react";
 import "highlight.js/styles/github-dark.css";
 
+// Prefix image paths from markdown with the GitHub Pages basePath.
+// Markdown authors write "/images/foo.png"; on GitHub Pages the actual URL
+// must be "/h45h-g4l4xy.github.io/images/foo.png".
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+function resolveImageSrc(src?: string): string | undefined {
+  if (!src) return src;
+  // Only prefix absolute paths that start with "/" (not "http" or "//")
+  if (src.startsWith("/") && !src.startsWith("//")) {
+    return `${BASE_PATH}${src}`;
+  }
+  return src;
+}
+
 interface Props {
   content: string;
 }
 
-// Memoized image component with lazy loading
+// Memoized image component with lazy loading + basePath-aware src resolution
 const LazyImage = memo(({ src, alt }: { src?: string; alt?: string }) => {
+  const resolvedSrc = resolveImageSrc(src);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    if (!imgRef.current || !src) return;
+    if (!imgRef.current || !resolvedSrc) return;
 
     // Native lazy loading
     imgRef.current.loading = "lazy";
@@ -26,7 +41,7 @@ const LazyImage = memo(({ src, alt }: { src?: string; alt?: string }) => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && imgRef.current) {
-            imgRef.current.src = src;
+            imgRef.current.src = resolvedSrc;
             observer.disconnect();
           }
         });
@@ -37,14 +52,14 @@ const LazyImage = memo(({ src, alt }: { src?: string; alt?: string }) => {
     observer.observe(imgRef.current);
 
     return () => observer.disconnect();
-  }, [src]);
+  }, [resolvedSrc]);
 
   return (
     <figure className="my-6">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         ref={imgRef}
-        data-src={src}
+        data-src={resolvedSrc}
         alt={alt || ""}
         className="rounded-lg border border-[var(--border)] w-full"
         loading="lazy"
@@ -110,7 +125,10 @@ function MarkdownRenderer({ content }: Props) {
   }, [content, addCopyButtons]);
 
   return (
-    <div ref={ref} className="prose">
+    // suppressHydrationWarning: rehypeHighlight / rehypeRaw can produce
+    // minor token-level differences between Node.js (build) and browser
+    // (runtime). This suppresses the warning without affecting functionality.
+    <div ref={ref} className="prose" suppressHydrationWarning>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeSlug, rehypeHighlight, rehypeRaw]}
