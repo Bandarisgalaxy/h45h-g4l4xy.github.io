@@ -1,235 +1,276 @@
 ---
 layout: post
-title: "Setting up VMs"
+title: "AI-Assisted Network Attack Lab: Kali vs Windows"
 date: 2026-03-11
 categories: [Projects, SOC]
-tags: [network-monitoring, nmap, intrusion-detection, cybersecurity, nmap, virtualbox, windows, linux]
+tags: [network-monitoring, nmap, intrusion-detection, cybersecurity, virtualbox, windows, kali-linux]
 author: Harshith
-description: A beginner-friendly project walkthrough setting up a host-only virtual lab network, scanning with Nmap, and using AI to interpret and triage network scan results for SOC monitoring.
+description: A step-by-step beginner-friendly lab where Kali Linux attacks a Windows machine using ping and Nmap, with AI helping you understand the results. No prior experience needed.
 toc: true
 ---
 
-## Project Overview
+## What Are We Building?
 
-This project demonstrates how to build a **minimal virtual lab environment** and leverage AI tooling to assist with network monitoring decisions. You will:
+In this lab, we pretend that **Kali Linux is the attacker** and **Windows is the victim**. The Ubuntu machine is the host (your physical computer running everything).
 
-- Configure an isolated host-only network between a Linux attacker/analyst VM and a Windows target VM
-- Validate connectivity with `ping`
-- Perform network discovery and port scanning with `nmap`
+We will:
 
-This type of workflow mirrors what a **Tier 1 SOC analyst** might do when investigating an unknown host in the environment — enumerate the asset, assess exposure, and escalate findings with context.
+1. Connect Kali and Windows on the same private network
+2. Try to ping Windows from Kali (it will fail at first)
+3. Fix the Windows firewall so ping works
+4. Scan Windows ports using a tool called **Nmap**
+5. Fix Windows settings so Nmap can see the ports
+6. Use AI to understand what the scan results mean
 
-> **Why this matters:** Modern SOC teams increasingly use AI copilots to reduce alert fatigue and accelerate triage. Understanding how to operationalize a tool like this — even in a homelab — is a marketable SOC skill.
-
----
-
-## Lab Environment
-
-| Component | Details |
-|---|---|
-| **Hypervisor** | Oracle VirtualBox |
-| **Analyst VM** | Kali Linux (or Ubuntu) |
-| **Target VM** | Windows 10 / Windows Server |
-| **Network Mode** | Host-Only Adapter |
-| **Analyst VM IP** | `192.168.67.128` (example) |
-| **Target VM IP** | `192.168.67.129` (example) |
-
-> Your IP addresses may differ. Run `ip a` on Linux or `ipconfig` on Windows to confirm your assigned addresses.
+> **Why learn this?** Real attackers do exactly this — they first check if a machine is alive (ping), then they find what services are running (Nmap). As a cybersecurity student, you need to understand both sides.
 
 ---
 
-## Network Topology
+## The Setup
+
+| Role | Machine | IP Address |
+|---|---|---|
+| 🖥️ **Host** | Ubuntu (your physical PC) | — |
+| 🗡️ **Attacker** | Kali Linux VM | `192.168.67.128` |
+| 🎯 **Victim** | Windows VM | `192.168.67.129` |
+| 🌐 **Network** | Host-Only (isolated, no internet) | `192.168.67.0/24` |
+
+> Your IP addresses may be slightly different. That is completely fine. Just use whichever IPs show up on your machines.
+
+---
+
+## How the Network Looks
 
 ```
-┌──────────────────────────────────────────┐
-│              VirtualBox Host             │
-│                                          │
-│  ┌─────────────────┐  ┌───────────────┐  │
-│  │  Kali Linux VM  │  │  Windows VM   │  │
-│  │  192.168.67.128 │  │ 192.168.67.129│  │
-│  └────────┬────────┘  └──────┬────────┘  │
-│           │                  │           │
-│           └──── Host-Only ───┘           │
-│              192.168.67.0/24             │
-└──────────────────────────────────────────┘
+┌────────────────────────────────────────────┐
+│          Ubuntu Host (Your PC)             │
+│                                            │
+│  ┌──────────────────┐  ┌────────────────┐  │
+│  │  Kali Linux VM   │  │   Windows VM   │  │
+│  │  (Attacker) 🗡️   │  │  (Victim) 🎯  │  │
+│  │  192.168.67.128  │  │ 192.168.67.129 │  │
+│  └────────┬─────────┘  └──────┬─────────┘  │
+│           │                   │            │
+│           └──── Host-Only ────┘            │
+│               192.168.67.0/24             │
+└────────────────────────────────────────────┘
 ```
 
-Both virtual machines are connected through a **Host-Only** virtual network adapter. This means:
-- The two VMs can communicate with each other
-- Neither VM has access to the internet (important for isolated lab safety)
-- The host machine can also communicate with both VMs
+Both VMs are on the **same isolated network** — they can talk to each other, but cannot reach the internet. This keeps the lab safe.
 
 ---
 
-## Step 1 — Configure Host-Only Network
+## Step 1 — Create the Host-Only Network
+
+First, tell VirtualBox to create a private network that both VMs will use.
 
 ### In VirtualBox
 
 1. Open **VirtualBox → Tools → Network Manager**
-2. Click **Create** to add a new Host-Only Network (e.g., `vboxnet0`)
-3. Set the **IPv4 Address** to `192.168.67.1` and **Mask** to `255.255.255.0`
-4. Enable the **DHCP Server** on this adapter (auto-assigns IPs to VMs) or assign static IPs manually
+2. Click **Create** to add a new Host-Only Network (it will be named something like `vboxnet0`)
+3. Set the **IPv4 Address** to `192.168.67.1` and **Subnet Mask** to `255.255.255.0`
+4. Turn on the **DHCP Server** so VMs get IPs automatically
 
-### Assign the Adapter to Each VM
+### Connect Both VMs to This Network
 
-1. Select your VM → **Settings → Network**
-2. Set **Adapter 1** to **Host-Only Adapter**
-3. Select `vboxnet0` from the Name dropdown
-4. Repeat for both VMs
+Do this for **both** the Kali VM and the Windows VM:
 
-![VirtualBox Network Settings](/images/Hostonly.png)
+1. Click on the VM → **Settings → Network**
+2. Change **Adapter 1** to **Host-Only Adapter**
+3. Pick `vboxnet0` from the Name dropdown
+4. Click **OK**
 
-### Verify IP Addresses
+![VirtualBox Host-Only Network Settings](/images/Hostonly.png)
 
-On **Kali Linux**:
+---
+
+## Step 2 — Find the IP Address of Each Machine
+
+After starting both VMs, you need to know their IP addresses so they can talk to each other.
+
+### On Kali Linux (Attacker)
+
+Open a terminal and type:
 
 ```bash
 ip a
 ```
+
 ![kali-ip](/images/kali-ip.png)
 
-Expected output (look for `eth0` or `enp0s3`):
+Look for a line that says `inet 192.168.67.xxx` — that number is your Kali IP.
 
 ```
 inet 192.168.67.128/24
 ```
 
-On **Windows** (Command Prompt):
+### On Windows (Victim)
+
+Open **Command Prompt** and type:
 
 ```
 ipconfig
 ```
+
 ![windows-ip](/images/windows-ip.png)
 
-Expected output:
+Look for a line that says `IPv4 Address` — that is your Windows IP.
 
 ```
 IPv4 Address . . . . : 192.168.67.129
-Subnet Mask  . . . . : 255.255.255.0
 ```
+
+> Write these numbers down. You will need them in every step.
 
 ---
 
-## Step 2 — Test Connectivity Using Ping
+## Step 3 — Try to Ping Windows from Kali
 
-From the **Kali Linux VM**, test if you can reach the Windows VM:
+Ping is like knocking on a door. You send a small message ("are you there?") and wait for a reply.
+
+On **Kali Linux**, open a terminal and type:
 
 ```bash
 ping 192.168.67.129
 ```
 
-### Expected Outcomes
+### What Happens?
 
-**Success:**
+You will most likely see this:
+
+```
+PING 192.168.67.129 (192.168.67.129) 56(84) bytes of data.
+Request timeout for icmp_seq 1
+Request timeout for icmp_seq 2
+```
+
+**No reply!** This is expected. Windows Firewall is quietly **dropping your ping packets** before they reach Windows.
+
+> **What is an ICMP packet?** Ping works by sending ICMP (Internet Control Message Protocol) packets. Think of it like shouting — but Windows has its ears covered. We need to tell Windows to listen.
+
+![Ping timeout screenshot](/images/ping.png)
+
+---
+
+## Step 4 — Allow Ping Through Windows Firewall
+
+We need to go into Windows and tell its firewall: "Hey, it is okay to respond to pings."
+
+There is already a rule built into Windows for this — we just need to **enable** it.
+
+### Steps
+
+1. Click **Start** and search for **Windows Defender Firewall**
+2. Click **Advanced Settings** on the left side
+3. Click **Inbound Rules** in the left panel
+
+![Windows Defender Firewall Advanced Settings](/images/icmp-allow1.png)
+
+4. Scroll through the list and find the rule called:
+
+   ```
+   File and Printer Sharing (Echo Request - ICMPv4-In)
+   ```
+
+5. You will see two versions of this rule — one for **Private** and one for **Domain**. Right-click the one that says **Private** and click **Enable Rule**
+
+   > We are enabling the Private profile because our Host-Only network counts as a private network. We are **not** enabling the Domain profile for now.
+
+![Enable ICMP Rule](/images/icmp-allow2.png)
+
+6. The rule is now enabled. Go back to Kali and try ping again.
+
+---
+
+## Step 5 — Ping Works! ✅
+
+Go back to your **Kali terminal** and run ping again:
+
+```bash
+ping 192.168.67.129
+```
+
+This time you should see:
 
 ```
 PING 192.168.67.129 (192.168.67.129) 56(84) bytes of data.
 64 bytes from 192.168.67.129: icmp_seq=1 ttl=128 time=0.543 ms
 64 bytes from 192.168.67.129: icmp_seq=2 ttl=128 time=0.612 ms
+64 bytes from 192.168.67.129: icmp_seq=3 ttl=128 time=0.598 ms
 ```
 
-**Failure (ICMP blocked):**
+**Windows is replying!** This means the two machines can now see each other. Press `Ctrl + C` to stop ping.
 
-```
-PING 192.168.67.129 (192.168.67.129) 56(84) bytes of data.
-Request timeout for icmp_seq 1
-```
-
-If `ping` fails, proceed to Step 3 to allow ICMP through the Windows Firewall.
-
-> **Why ping first?** ICMP connectivity is the most basic test of network reachability. If ping fails, scanning tools like Nmap may either fail or produce incorrect results.
-
-![Ping Success Screenshot](/images/ping.png)
+> **What this tells us:** The victim machine (Windows) is **alive** and reachable. In a real attack, the attacker now knows they have a live target.
 
 ---
 
-## Step 3 — Allow ICMP in Windows Firewall
+## Step 6 — Scan Windows Ports Using Nmap
 
-By default, Windows blocks ICMP echo requests (ping). This must be enabled for the lab to function.
+Now that we can reach Windows, let us find out **what services are running** on it. We use a tool called **Nmap** (Network Mapper) for this.
 
-### Method 1: Windows Firewall GUI
-
-1. Open **Windows Defender Firewall** → **Advanced Settings**
-![icmp-allow1](/images/icmp-allow1.png)
-2. Click **Inbound Rules** → **New Rule...**
-3. Select **Custom** → **All Programs** → **ICMPv4** → **Echo Request**
-4. Set **Action: Allow the connection**
-5. Apply to **Private** and **Public** profiles
-6. Name: `Allow ICMPv4 Echo (Lab)`
-![icmp-allow2](/images/icmp-allow2.png)
-
----
-
-## Step 4 — Run Nmap Scan
-
-Nmap (`Network Mapper`) is the industry standard for network discovery and port scanning. With connectivity confirmed, perform a basic scan against the Windows VM.
-
-### 4a. Quick Ping Scan (Host Discovery)
-
-```bash
-nmap -sn 192.168.67.0/24
-```
-
-This sends ICMP and ARP probes to all 254 hosts in the subnet to identify which are online — without scanning ports.
-
-```
-Nmap scan report for 192.168.67.128 [host]
-Nmap scan report for 192.168.67.129
-Host is up (0.00050s latency).
-```
-
-### 4b. Default Port Scan (Top 1000 Ports)
+On **Kali Linux**, run:
 
 ```bash
 nmap 192.168.67.129
 ```
 
-This scans the top 1000 most common ports using a TCP SYN scan (requires root; falls back to TCP connect if non-root).
+### What Happens?
 
-### 4c. Service + Version Detection (Recommended)
+You will likely see very few open ports, or none at all:
 
-```bash
-nmap -sV -sC 192.168.67.129
+```
+Starting Nmap 7.94
+Nmap scan report for 192.168.67.129
+Host is up (0.00052s latency).
+All 1000 scanned ports on 192.168.67.129 are in filtered state
 ```
 
-| Flag | Description |
-|---|---|
-| `-sV` | Probe open ports to detect service name and version |
-| `-sC` | Run default Nmap scripts (banner grabbing, vulnerability checks) |
+**Filtered** means Windows is blocking the TCP connection probes from Nmap. The firewall is dropping Nmap's packets the same way it dropped ping before.
 
-### 4d. OS Detection + Aggressive Scan
+> **What is a port?** Think of a Windows machine like a building. Ports are the different doors into that building — one door for web traffic, one for file sharing, one for remote desktop, etc. Nmap is trying to check which doors are open.
 
-```bash
-nmap -A 192.168.67.129
-```
-
-`-A` enables OS detection, service version detection, script scanning, and traceroute. Requires root/sudo.
-
-```bash
-sudo nmap -A 192.168.67.129
-```
 ---
 
-## Step 5 — Enable Network Discovery on Windows
+## Step 7 — Allow Nmap Through Windows (Network Discovery)
 
-For Nmap's OS fingerprinting and script scanning to work correctly, ensure the Windows VM responds normally to probes.
+We need to tell Windows to allow TCP connections so Nmap can scan properly. We do this through **Network and Sharing Center**.
 
-### Enable Network Discovery
+### Steps
 
-1. Open **Control Panel → Network and Sharing Center**
-![tcp-allow1](/images/tcp-allow1.png)
-![tcp-allow2](/images/tcp-allow2.png)
-2. Click **Change advanced sharing settings**
-![tcp-allow3](/images/tcp-allow3.png)
-3. Under **Private** network profile, select:
-   - **Turn on network discovery**
-   - **Turn on file and printer sharing**
-![tcp-allow4](/images/tcp-allow4.png)
-4. Save changes
+1. Open **Control Panel**
+2. Click **Network and Internet**
+3. Click **Network and Sharing Center**
 
-## Step 6 — Scan Results
+![Network and Sharing Center](/images/tcp-allow1.png)
 
-After running `nmap -sV -sC 192.168.67.129`, you will see output similar to:
+4. Click **Change advanced sharing settings** on the left
+
+![Advanced Sharing Settings link](/images/tcp-allow2.png)
+
+5. Look for the **Guest or Public** profile section and expand it
+
+![Public Profile section](/images/tcp-allow3.png)
+
+6. Enable both of these options:
+   - ✅ **Turn on network discovery**
+   - ✅ **Turn on file and printer sharing**
+
+![Turn on network discovery and file sharing](/images/tcp-allow4.png)
+
+7. Click **Save changes**
+
+---
+
+## Step 8 — Run Nmap Again ✅
+
+Go back to **Kali Linux** and run Nmap again:
+
+```bash
+nmap 192.168.67.129
+```
+
+This time you will see all the open ports and what services are running on them:
 
 ```
 Starting Nmap 7.94 ( https://nmap.org )
@@ -257,38 +298,62 @@ Host script results:
 |_  start_date: N/A
 ```
 
-### Port Analysis Reference
-
-| Port | Service | Security Relevance |
-|---|---|---|
-| `135/tcp` | MSRPC | Used by Windows services; exposed remotely — potential lateral movement vector |
-| `139/tcp` | NetBIOS | Legacy Windows file/print sharing; disable if SMBv1 not needed |
-| `445/tcp` | SMB | File sharing; critical — target of EternalBlue (MS17-010) |
-| `3389/tcp` | RDP | Remote Desktop; must be protected with NLA and strong auth |
-| `49664/tcp` | MSRPC (ephemeral) | Dynamic RPC endpoints; expected on Windows hosts |
-
-> **Red flag:** Ports 445 (SMB) and 3389 (RDP) exposed on a Windows host are high-value targets in a real environment. Both have been exploited in major ransomware campaigns.
-
-![Nmap Results Screenshot](/images/nmap-run.png)
+![Nmap scan output](/images/nmap-run.png)
 
 ---
 
-## Learning Outcome
+## Step 9 — Understand the Results with AI
 
-By completing this project, you have demonstrated the ability to:
+Now copy the Nmap output and paste it into an AI tool like **ChatGPT**, **Claude**, or any AI assistant you like. Use this prompt:
 
-| Skill | Description |
-|---|---|
-| **Lab Setup** | Configure an isolated virtual network environment for safe testing |
-| **Network Connectivity** | Validate connectivity using ICMP / `ping` |
-| **Firewall Management** | Modify Windows Defender Firewall rules via GUI and CLI |
-| **Network Discovery** | Use Nmap for host discovery, port scanning, and service enumeration |
+```
+You are a cybersecurity teacher helping a beginner student.
+I ran an Nmap scan on a Windows machine in my home lab.
+Here are the results:
+
+[PASTE YOUR NMAP OUTPUT HERE]
+
+Please explain in simple English:
+1. What each open port does
+2. Which ports are risky and why
+3. What an attacker could do with this information
+4. What I should do to make this machine more secure
+```
+
+### What the AI Will Tell You
+
+Here is a quick reference for the ports we found:
+
+| Port | Service | What It Does | Risk Level |
+|---|---|---|---|
+| `135/tcp` | MSRPC | Windows internal communication | 🟡 Medium |
+| `139/tcp` | NetBIOS | Old-style Windows file sharing | 🟡 Medium |
+| `445/tcp` | SMB | File sharing between computers | 🔴 **High** — was used in WannaCry ransomware |
+| `3389/tcp` | RDP | Remote Desktop — lets you control Windows remotely | 🔴 **High** — common brute-force target |
+| `49664/tcp` | MSRPC (dynamic) | Windows background services | 🟢 Low |
+
+> **The two ports to remember:** Port **445 (SMB)** and **3389 (RDP)** are the most dangerous. The WannaCry and NotPetya ransomware attacks both targeted port 445. If you ever see these open on a real machine facing the internet, it is a serious problem.
+
+---
+
+## What You Just Learned
+
+Congratulations — you just performed a basic network recon attack! Here is what you did, and why each step matters:
+
+| Step | What You Did | Why It Matters |
+|---|---|---|
+| ✅ Set up Host-Only network | Connected Kali and Windows privately | Safe isolated lab |
+| ✅ Ran ping | Confirmed Windows is alive | First thing any attacker checks |
+| ✅ Fixed ICMP firewall rule | Allowed ping to get through | Understand how firewall rules work |
+| ✅ Ran Nmap | Found all open ports and services | Attackers use this to find weak points |
+| ✅ Fixed network discovery | Allowed Nmap to scan properly | Understand what makes a machine visible |
+| ✅ Used AI to interpret results | Got plain English explanations | Real SOC analysts use AI for triage |
 
 ---
 
 ## References
 
 - [Nmap Official Documentation](https://nmap.org/docs.html)
-- [NIST NVD — CVE-2017-0144 (EternalBlue)](https://nvd.nist.gov/vuln/detail/CVE-2017-0144)
-- [Microsoft Security Baseline — SMB Best Practices](https://docs.microsoft.com/en-us/windows-server/storage/file-server/smb-security)
+- [CVE-2017-0144 — EternalBlue / WannaCry (NIST)](https://nvd.nist.gov/vuln/detail/CVE-2017-0144)
+- [Microsoft — SMB Security Best Practices](https://docs.microsoft.com/en-us/windows-server/storage/file-server/smb-security)
 - [VirtualBox Host-Only Networking Guide](https://www.virtualbox.org/manual/ch06.html#network_hostonly)
