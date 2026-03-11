@@ -2,81 +2,145 @@
 layout: post
 title: "Some Assembly Required 1"
 date: 2025-08-28
-categories: [PicoCTF, webexploitation]
-tags: [picoctf,webexploitation,Medium]
+categories: [PicoCTF, Web Exploitation]
+tags: [picoctf, webexploitation, webassembly, wasm, reverse-engineering, ctf, Medium]
+author: Harshith
+description: A PicoCTF web exploitation challenge reverse engineering a WebAssembly (WASM) binary to extract a hardcoded flag string from the compiled bytecode.
+toc: true
 ---
-🧮**Challenge Name:** Some Assembly Required 1\
-**URL:** http://mercury.picoctf.net:15472/index.html
 
-------------------------------------------------------------------------
+## Introduction
 
-## 📌 Prerequisites
+The **Some Assembly Required 1** challenge on PicoCTF introduces WebAssembly (Wasm) — a binary instruction format designed for execution in modern web browsers. This challenge reinforces a fundamental security principle: **client-side code cannot keep secrets**, regardless of whether it is JavaScript, WebAssembly, or any other format that executes in the browser.
 
-Before solving this challenge, let's understand some basics:
+> **Challenge URL:** `http://mercury.picoctf.net:15472/index.html`
 
-### 1. What is assembly in websites?
+---
 
-In websites, when we talk about *assembly*, we usually mean
-**WebAssembly (Wasm)**.\
-It is a low-level binary format that runs in browsers, similar to how
-assembly works close to the machine.
+## Challenge Overview
 
-### 2. On seeing assembly what can we understand?
+| Field | Details |
+|---|---|
+| **Platform** | PicoCTF |
+| **Category** | Web Exploitation |
+| **Difficulty** | Medium |
+| **Technique** | WebAssembly Binary Inspection, Client-Side Reverse Engineering |
 
-When you see `.wasm` files in a website, it means the site is using
-WebAssembly.\
-You can guess that some important logic or data (sometimes even the flag
-in CTFs) might be hidden there.
+---
 
-### 3. What is a `.wasm` file?
+## Background: WebAssembly
 
-It's a **WebAssembly binary file** that browsers can run.\
-You can convert it into human-readable form (`.wat`) to study it.
+### What is WebAssembly?
 
-### 4. Importance of `.wasm` files for developers
+WebAssembly (Wasm) is a **low-level binary format** executed by web browsers. It is like machine code for the web — compiled from languages like C, C++, and Rust for high-performance browser execution.
 
--   Run heavy tasks faster than JavaScript.
--   Reuse C, C++, or Rust code on the web.
--   Make apps like games, video editors, or simulations run smoothly in
-    browsers.
+### Security Implications of `.wasm` Files
 
-### 5. As a security person how to consider `.wasm` files?
+| Perspective | Implication |
+|---|---|
+| **Developer** | Faster execution, reuse of native code in browsers |
+| **Security Researcher** | Client-side — fully inspectable; can hide strings but not secrets |
+| **Attacker** | Extract hardcoded secrets, API keys, or logic from Wasm binaries |
 
--   They can hide secrets (like flags or API keys).
--   Everything on the client can be reversed, so secrets should
-    **never** be stored in Wasm.
--   Wasm should be checked for vulnerabilities, just like any other
-    binary.
+### Key Rule
 
-------------------------------------------------------------------------
+> **Never store secrets (flags, API keys, passwords) in client-side code — including WebAssembly.**
 
-## 🚀 Approach (Step by Step)
+---
 
-1.  Open the website: `http://mercury.picoctf.net:15472/index.html`
-2.  View source code (`Ctrl+U`) → check if any `.js` or `.wasm` files
-    are loaded.
-3.  Open DevTools (`F12`) → **Sources tab** → look under the domain for
-    `.wasm` files.
-4.  Click on the `.wasm` file. Scroll through it.
-    At the bottom of the file, you will often find readable strings.
-5.  In this challenge, the **flag** is visible at the bottom of the
-    `.wasm` file.
+## Solution Walkthrough
 
-------------------------------------------------------------------------
+### Step 1: Open the Website
 
-## 🎯 Final Flag
+Navigate to `http://mercury.picoctf.net:15472/index.html`. The page appears as a simple interface.
 
-    picoCTF{c733fda95299a16681f37b3ff09f901c}
+### Step 2: View Page Source
 
-------------------------------------------------------------------------
+Press `Ctrl + U` to view the page source. Check for linked JavaScript or `.wasm` files.
 
-## 📝 Learning Takeaways
+### Step 3: Open Developer Tools
 
--   WebAssembly is like assembly for the web.
--   `.wasm` files can hide important strings, but they can always be
-    inspected.
--   As a beginner, practice opening `.wasm` files in DevTools and
-    searching for readable data.
--   From a security view: **never trust client-side code to hide
-    secrets**.
+Press `F12` to open DevTools. Navigate to:
 
+```
+Sources tab → [domain] → look for .wasm files
+```
+
+### Step 4: Inspect the WASM File
+
+Click on the `.wasm` file in the Sources panel. The browser decompiles it to human-readable WebAssembly Text Format (`.wat`).
+
+**Scroll to the bottom** of the decompiled Wasm file. Strings and data segments are typically stored at the end of the binary — and in many CTF challenges, the flag is stored as a plaintext string in the data section.
+
+### Step 5: Extract the Flag
+
+The flag appears as a readable string in the data section of the Wasm binary:
+
+```
+picoCTF{c733fda95299a16681f37b3ff09f901c}
+```
+
+---
+
+## Key Concepts
+
+**Wasm Binary Structure (simplified):**
+
+```
+WebAssembly Module
+├── Type Section       (function signatures)
+├── Function Section   (function definitions)
+├── Memory Section     (linear memory setup)
+├── Export Section     (exported functions/memory)
+├── Code Section       (compiled bytecode)
+└── Data Section       (string literals, hardcoded data ← flag is here)
+```
+
+**Browser Wasm Decompilation:**
+
+Modern browsers automatically decompile `.wasm` files into readable `.wat` (WebAssembly Text Format) in the DevTools Sources panel. No additional tools are required for basic inspection.
+
+**Alternative: `wasm2wat` Command-Line Tool:**
+
+```bash
+# Install wabt (WebAssembly Binary Toolkit)
+sudo apt install wabt
+
+# Convert binary .wasm to text .wat
+wasm2wat file.wasm -o file.wat
+
+# Search for strings
+grep -a "picoCTF" file.wat
+```
+
+---
+
+## Flag
+
+```
+picoCTF{c733fda95299a16681f37b3ff09f901c}
+```
+
+---
+
+## Security Insights
+
+- **WebAssembly provides obfuscation, not security:** Wasm is harder to read than JavaScript but is still fully reversible by anyone with DevTools.
+- **Data sections are string goldmines:** Hardcoded strings in Wasm data sections are trivially extracted — no decompilation expertise required.
+- **Client-side validation is bypassable:** Any check performed in Wasm (password validation, license checks) can be bypassed by inspecting and patching the Wasm binary.
+- **Recommended pattern:** Perform validation server-side. The client should only receive a token after the server verifies authenticity — never embed the secret in client code.
+
+---
+
+## Conclusion
+
+Some Assembly Required 1 demonstrates that WebAssembly is not a security boundary. Despite being binary and appearing opaque, the browser's built-in DevTools can display Wasm content in a human-readable format. The flag hardcoded in the data section is trivially visible — reinforcing that secrets must never reside in any code or data downloaded to the user's browser.
+
+---
+
+## References
+
+- [WebAssembly Official Site](https://webassembly.org/)
+- [MDN — WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly)
+- [WABT — WebAssembly Binary Toolkit](https://github.com/WebAssembly/wabt)
+- [PicoCTF Official Platform](https://picoctf.org)

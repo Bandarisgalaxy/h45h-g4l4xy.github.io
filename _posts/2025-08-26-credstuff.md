@@ -2,41 +2,65 @@
 layout: post
 title: "Credstuff"
 date: 2025-08-26
-categories: [PicoCTF, cryptography]
-tags: [picoctf, cryptography, ctf, Medium]
+categories: [PicoCTF, Cryptography]
+tags: [picoctf, cryptography, caesar-cipher, rot13, credential-leak, ctf, Medium]
+author: Harshith
+description: A PicoCTF cryptography challenge finding and cracking a ROT13-encoded password from a leaked credential database dump.
+toc: true
 ---
 
-### 🔒Description
-We found a leak of a blackmarket website's login credentials. The task is to find the password of the user `cultiris` and successfully decrypt it.
+## Introduction
+
+The **Credstuff** challenge on PicoCTF simulates a real-world credential database leak scenario. Given a pair of leaked credential files, the objective is to locate a specific user's password and decode it — revealing that the victim site stored passwords using ROT13, a trivially reversible encoding masquerading as security.
+
+> **Challenge Description:** "We found a leak of a blackmarket website's login credentials. The task is to find the password of the user `cultiris` and successfully decrypt it."
 
 ---
 
-### Approach (Step by Step)
+## Challenge Overview
 
-#### 1. Download the leak file
+| Field | Details |
+|---|---|
+| **Platform** | PicoCTF |
+| **Category** | Cryptography |
+| **Difficulty** | Medium |
+| **Technique** | Credential Enumeration, ROT13 Decryption |
+
+---
+
+## Environment Setup
+
+**Required Tools:**
+- Linux terminal with `wget`, `tar`, `grep`, `head`, `tail`, `tr`
+
+---
+
+## Solution Walkthrough
+
+### Step 1: Download the Credential Leak Archive
+
 ```bash
 wget https://artifacts.picoctf.net/c/151/leak.tar
 ```
-- `wget` downloads files from a given URL.  
-- Here, we download the archive `leak.tar`.
 
----
+### Step 2: Extract the Archive
 
-#### 2. Extract the `.tar` archive
 ```bash
 tar -xvf leak.tar
 ```
-- `tar` is used for archiving/extracting files.  
-- Options:  
-  - `x` → extract  
-  - `v` → verbose (show progress)  
-  - `f` → specify filename  
 
-After extraction, a folder named `leak` is created.
+**Flags explained:**
 
----
+| Flag | Meaning |
+|---|---|
+| `-x` | Extract files |
+| `-v` | Verbose output (show file names) |
+| `-f` | Specify the archive filename |
 
-#### 3. Go inside the folder and list contents
+After extraction, a `leak/` directory is created.
+
+### Step 3: Explore the Files
+
 ```bash
 cd leak
 ls
@@ -46,57 +70,59 @@ Output:
 ```
 passwords.txt  usernames.txt
 ```
-We have two files: one for usernames and one for passwords.
 
----
+The two files are aligned line-by-line: line `N` in `usernames.txt` corresponds to line `N` in `passwords.txt`.
 
-#### 4. Find the line number of the user `cultiris`
+### Step 4: Find the Line Number for `cultiris`
+
 ```bash
 grep -n "cultiris" usernames.txt
 ```
-- `grep` searches for the keyword in the file.  
-- `-n` shows the line number where it occurs.  
+
+**Flag:** `-n` shows the line number.
 
 Output:
 ```
 378:cultiris
 ```
-→ `cultiris` is on **line 378**.
 
----
+`cultiris` is on **line 378**.
 
-#### 5. Extract the corresponding password
-Since usernames and passwords align line by line, the password is also on line 378 of `passwords.txt`.
+### Step 5: Extract the Corresponding Password
 
 ```bash
 head -n 378 passwords.txt | tail -n 1
 ```
-- `head -n 378` → prints the first 378 lines.  
-- `tail -n 1` → takes only the last line from that output.  
+
+**How it works:**
+
+- `head -n 378` — print the first 378 lines
+- `| tail -n 1` — from those, take only the last line (line 378)
 
 Output:
 ```
 cvpbPGS{P7e1S_54I35_71Z3}
 ```
 
----
+### Step 6: Identify the Encoding
 
-#### 6. Decrypt the password (ROT13)
-- The text looks suspicious because `cvpbPGS` resembles `picoCTF`.  
-- This hints at a **ROT13 cipher** (each letter shifted by 13).  
+The password `cvpbPGS{...}` looks similar to `picoCTF{...}`. Comparing:
 
-We can decode it using an online tool (like [dcode ROT13](https://www.dcode.fr/rot-13-cipher)) or directly in Linux with the `tr` command:
+```
+cvpb  →  pico
+```
+
+Each letter is shifted by 13 — this is **ROT13**.
+
+### Step 7: Decode with ROT13
 
 ```bash
 echo "cvpbPGS{P7e1S_54I35_71Z3}" | tr 'A-Za-z' 'N-ZA-Mn-za-m'
 ```
 
-**Explanation of the command:**
-- `echo "..."` → prints the text to standard output.  
-- `|` (pipe) → sends that output into the next command.  
-- `tr` → translates characters.  
-  - `'A-Za-z'` → match all uppercase (`A-Z`) and lowercase (`a-z`) letters.  
-  - `'N-ZA-Mn-za-m'` → shift letters by 13 positions (ROT13).  
+**How `tr` performs ROT13:**
+- `A-Za-z` — match all alphabetic characters
+- `N-ZA-Mn-za-m` — shift each by 13 positions in the alphabet
 
 Output:
 ```
@@ -105,18 +131,59 @@ picoCTF{C7r1F_54V35_71M3}
 
 ---
 
-### ✅ Final Flag
+## Key Concepts
+
+**ROT13 Cipher:**
+
+ROT13 (Rotate by 13) is a special case of the Caesar cipher where the shift is exactly 13 — which means applying it twice returns the original text:
+
+```
+Encrypt:  picoCTF → cvpbPGS
+Decrypt:  cvpbPGS → picoCTF  (apply ROT13 again)
+```
+
+**Linux `tr` Command:**
+
+```bash
+tr 'A-Za-z' 'N-ZA-Mn-za-m'
+```
+
+This maps:
+- `A → N`, `B → O`, ..., `M → Z`, `N → A`, ..., `Z → M` (uppercase)
+- Same logic for lowercase
+
+**Line-Aligned File Lookups:**
+
+When two files are aligned line-by-line (common in database exports), you can cross-reference them with `grep -n` and `head | tail`.
+
+---
+
+## Flag
+
 ```
 picoCTF{C7r1F_54V35_71M3}
 ```
 
 ---
 
-### 🔑 Learning Takeaways
-- **Archiving**: Extract `.tar` files using `tar -xvf`.  
-- **File inspection**: Use `grep -n` to find exact line numbers.  
-- **Line mapping**: When two files correspond line by line, you can use `head | tail` to pick exact lines.  
-- **Cryptography basics**: ROT13 is a substitution cipher where letters are shifted by 13.  
-- **Linux trick**: You can use `tr` to perform text transformations like ROT13 directly in the terminal.  
+## Security Insights
+
+- **ROT13 is not a security measure:** It is a trivially reversible encoding, not encryption. Storing passwords in ROT13 provides zero protection.
+- **Password hashing requirements:** Real applications must store passwords using adaptive, salted, one-way hashing algorithms: **bcrypt**, **Argon2**, or **PBKDF2**.
+- **Credential stuffing is a real-world attack:** Leaked credentials from one breach are tested on other services (credential stuffing). This challenge simulates that reconnaissance phase.
+- **Audit leaked credential datasets:** Tools like `grep` allow rapid analysis of large credential dumps during incident response or threat intelligence work.
 
 ---
+
+## Conclusion
+
+Credstuff simulates the first step of a real credential-stuffing attack: finding a target user in a leaked database and recovering their password. The ROT13 "encoding" of the password makes this a cryptography challenge, while the file manipulation techniques (`grep`, `head`, `tail`) reflect real incident response and OSINT workflows.
+
+---
+
+## References
+
+- [Wikipedia — ROT13](https://en.wikipedia.org/wiki/ROT13)
+- [OWASP — Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
+- [Have I Been Pwned](https://haveibeenpwned.com/) — real-world credential leak database
+- [PicoCTF Official Platform](https://picoctf.org)

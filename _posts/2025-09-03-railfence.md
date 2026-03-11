@@ -2,98 +2,167 @@
 layout: post
 title: "Railfence"
 date: 2025-09-03
-categories: [PicoCTF, cryptography]
-tags: [picoctf, cryptography, ctf, Medium]
+categories: [PicoCTF, Cryptography]
+tags: [picoctf, cryptography, rail-fence-cipher, transposition, ctf, Medium]
+author: Harshith
+description: A PicoCTF cryptography challenge decrypting a Rail Fence transposition cipher with 4 rails using Linux terminal tools and an online decoder.
+toc: true
 ---
 
-## 🔑Description  
-We are given an encrypted message. The description says it was encoded with the **Rail Fence Cipher** using **4 rails**.  
-Our goal is to decrypt it and recover the hidden flag.
+## Introduction
 
----
+The **Railfence** challenge on PicoCTF introduces the Rail Fence cipher — a classical **transposition cipher** where the message is written in a zig-zag pattern across multiple "rails" (rows) and then read row by row. Unlike substitution ciphers, transposition ciphers preserve the original letters but rearrange their positions, making them immune to letter-frequency analysis.
 
-## Step 1: What is a Rail Fence Cipher?  
-The Rail Fence Cipher is a type of **transposition cipher**.  
-That means it doesn’t change the letters themselves, but only rearranges their order.  
-
-Here’s how it works:  
-1. You choose the number of “rails” (rows). In this challenge, it’s 4.  
-2. You write the message in a zig-zag pattern across those rails.  
-3. Then you read the message row by row to create the ciphertext.  
-
-To **decrypt**, we need to reverse this process.  
-
-Example:  
-Ciphertext = `HLOLELWRDLO`  
-Decryption = `HELLO_WORLD`  
-
-For detailed information: [Crypto Guide](https://bandarisgalaxy.github.io/h45h-g4l4xy.github.io/posts/crypto-guide/)
+> **Challenge Description:** "We are given an encrypted message encoded with the Rail Fence Cipher using 4 rails. Decrypt it to find the hidden flag."
 
 ---
 
-## Step 2: Download the message  
-Open a terminal and run:  
+## Challenge Overview
+
+| Field | Details |
+|---|---|
+| **Platform** | PicoCTF |
+| **Category** | Cryptography |
+| **Difficulty** | Medium |
+| **Technique** | Rail Fence Transposition Cipher Decryption |
+| **Key** | 4 rails |
+
+---
+
+## Environment Setup
+
+**Required Tools:**
+- Linux terminal with `wget`, `cat`, `tr`
+- Online decoder: [Cryptii Rail Fence Cipher](https://cryptii.com/pipes/rail-fence-cipher)
+
+---
+
+## Background: How the Rail Fence Cipher Works
+
+The Rail Fence cipher writes the plaintext in a zig-zag pattern across N rails, then reads each rail left-to-right to produce the ciphertext.
+
+**Example with 3 rails and plaintext `HELLOWORLD`:**
+
+```
+H . . . O . . . L .      Rail 1
+. E . L . W . R . D      Rail 2
+. . L . . . O . . .      Rail 3
+```
+
+Reading rail by rail:
+- Rail 1: `HOL`
+- Rail 2: `ELWRD`
+- Rail 3: `LO`
+
+Ciphertext: `HOLLELWRDLO`
+
+To **decrypt**, we reverse this process by reconstructing which positions each rail occupies.
+
+---
+
+## Solution Walkthrough
+
+### Step 1: Download the Encrypted Message
 
 ```bash
 wget https://artifacts.picoctf.net/c/188/message.txt
-cat -A message.txt    # shows line breaks as $ so you know the exact format
-```  
-
-If needed, make the ciphertext a single line:  
-
-```bash
-tr -d '\n' < message.txt > message_oneline.txt
 ```
 
-The file contains:  
+### Step 2: View the File Contents
+
+```bash
+cat message.txt
+```
+
+Output:
 
 ```
 Ta _7N6D49hlg:W3D_H3C31N__A97ef sHR053F38N43D7B i33___N6
-```  
+```
 
-This is our encrypted text.
+### Step 3: Clean Up the Message (if multi-line)
 
----
+If the message spans multiple lines:
 
-## Step 3: Decrypt the message  
-We know it’s a Rail Fence Cipher with **4 rails**. Instead of coding, we can use an online tool.  
+```bash
+tr -d '
+' < message.txt > message_oneline.txt
+cat message_oneline.txt
+```
 
-1. Go to [Cryptii](https://cryptii.com/pipes/rail-fence-cipher).  
-2. Select **Decode**.  
-3. Set the number of rails to **4**.  
-4. Paste the encrypted text.  
+### Step 4: Decrypt Using Cryptii
 
-The tool gives us:  
+1. Go to [Cryptii Rail Fence Cipher](https://cryptii.com/pipes/rail-fence-cipher)
+2. Select **Decode** mode
+3. Set **Rails** to `4`
+4. Paste the ciphertext
+5. Copy the decoded output
+
+Decoded result:
 
 ```
 The flag is: WH3R3_D035_7H3_F3NC3_8361N_4ND_3ND_4A76B997
-```  
-
----
-
-## Step 4: Format the flag  
-picoCTF requires the flag in the format:  
-
 ```
-picoCTF{...}
-```  
 
-So the final flag is:  
+### Step 5: Format the Flag
+
+PicoCTF flags use the format `picoCTF{...}`:
 
 ```
 picoCTF{WH3R3_D035_7H3_F3NC3_8361N_4ND_3ND_4A76B997}
-```  
+```
 
 ---
 
-## Step 5: What did we learn?  
-From this challenge, we learned:  
-- What the Rail Fence Cipher is and how it works.  
-- How to use Linux commands (`wget`, `cat`, `tr`) to fetch and clean files.  
-- How to use the Cryptii website to decode ciphers without writing code.  
-- How to properly format picoCTF flags.  
+## Key Concepts
+
+**Transposition vs. Substitution Ciphers:**
+
+| Cipher Type | What Changes | Example |
+|---|---|---|
+| Substitution | Letters are replaced | Caesar, Vigenere |
+| Transposition | Letter order is rearranged | Rail Fence, Columnar |
+
+**Rail Fence with 4 Rails Pattern:**
+
+For a 4-rail cipher, the zig-zag pattern looks like:
+
+```
+X . . . . . X . . . . . X      Rail 1
+. X . . . X . X . . . X .      Rail 2
+. . X . X . . . X . X . .      Rail 3
+. . . X . . . . . X . . .      Rail 4
+```
+
+The period of the zig-zag is `2 * (N - 1) = 2 * 3 = 6` characters for 4 rails.
 
 ---
 
-✅ Final Answer:  
-**picoCTF{WH3R3_D035_7H3_F3NC3_8361N_4ND_3ND_4A76B997}**
+## Flag
+
+```
+picoCTF{WH3R3_D035_7H3_F3NC3_8361N_4ND_3ND_4A76B997}
+```
+
+---
+
+## Security Insights
+
+- **Transposition ciphers are breakable with known plaintext:** If you know the flag format (`picoCTF`), you can determine the rail count by testing 2-10 rails and checking which produces the known prefix.
+- **Combining transposition and substitution:** Historical ciphers like the Double Transposition or the Nihilist cipher combined both techniques. Modern block ciphers like AES use both substitution (S-boxes) and permutation (ShiftRows) internally.
+- **Columnar Transposition:** A more complex transposition variant used in WWII-era systems — write plaintext in rows, read by column using a keyword-derived order.
+
+---
+
+## Conclusion
+
+The Railfence challenge demonstrates that transposition ciphers — despite operating on the original letters without substitution — are still easily broken with knowledge of the parameters (number of rails). Online tools like Cryptii make Rail Fence decryption instantaneous once the rail count is known.
+
+---
+
+## References
+
+- [Cryptii — Rail Fence Cipher](https://cryptii.com/pipes/rail-fence-cipher)
+- [Wikipedia — Rail Fence Cipher](https://en.wikipedia.org/wiki/Rail_fence_cipher)
+- [dCode — Rail Fence Cipher](https://www.dcode.fr/rail-fence-cipher)
+- [PicoCTF Official Platform](https://picoctf.org)

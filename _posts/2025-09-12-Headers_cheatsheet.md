@@ -1,311 +1,392 @@
 ---
 layout: post
-title: "HTTP Headers"
+title: "HTTP Headers Cheatsheet"
 date: 2025-09-12
-categories: [CTF Tips & Tricks]
-tags: [picoctf, webexploitation, ctf]
+categories: [Guides, Web Exploitation]
+tags: [http, headers, cheatsheet, curl, web, ctf, guide]
+author: Harshith
+description: A comprehensive HTTP headers reference guide covering 22 headers with CTF relevance, security implications, and practical curl examples.
+toc: true
 ---
 
-## 📡HTTP Headers Cheatsheet for CTFs
+## Introduction
 
-A beginner-friendly, easy-to-read cheatsheet. Each header is separated and highlighted using bold and backticks for clarity.
-![Http-Headers](https://kodekloud.com/kk-media/image/upload/v1752882465/notes-assets/images/Nginx-For-Beginners-HTTP-Headers/http-headers-request-response-diagram.jpg)
+HTTP headers are the metadata layer of every web request and response. In CTF web exploitation challenges, manipulating or inspecting headers is often the key to bypassing access controls, revealing hidden information, or understanding server behavior. This cheatsheet covers the 22 most relevant headers with their CTF use cases, security implications, and practical `curl` examples.
 
-### 1. **Host**
+---
 
-📌 **What it is:** Identifies the domain the request is targeting.
+## Request Headers
 
-🕵️ **CTF Relevance:** Virtual host challenges often require modifying `Host` to access hidden admin panels.
+### 1. Host
 
-🔑 **Keywords/Phrases:** `virtual host`, `vhost fuzzing`, `subdomain access`
-
-```
-Host: admin.ctf.com
-```
-
-### 2. **User-Agent**
-
-📌 **What it is:** Identifies the browser or tool making the request.
-
-🕵️ **CTF Relevance:** Spoofing `User-Agent` (Googlebot, curl) may reveal hidden content or bypass restrictions.
-
-🔑 **Keywords/Phrases:** `spoofing User-Agent`, `crawler only`, `mobile-only site`
+**Purpose:** Specifies the target domain that the client is requesting.
 
 ```
-User-Agent: Googlebot/2.1 (+http://www.google.com/bot.html)
+Host: example.com
 ```
 
-### 3. **Referer**
+**CTF Relevance:** Virtual host routing — different `Host` values can route to different applications on the same IP address. Changing it may reveal hidden admin panels or staging environments.
 
-📌 **What it is:** It is a request type header. This is use to hold the previous page link where this new page come, that the back button of the browsers can work.
-
-🕵️ **CTF Relevance:** Can bypass referer-based access control.
-
-🔑 **Keywords/Phrases:** `referer check`, `came from`, `Referer bypass`
-
-```
-Referer: https://example.com/admin
+```bash
+curl -H "Host: admin.internal" http://10.10.10.10/
 ```
 
-### 4. **Cookie**
+---
 
-📌 **What it is:** It is a request type header. A cookie used in the requests sent by the user to the server.
+### 2. User-Agent
 
-🕵️ **CTF Relevance:** Editing cookies may reveal session tokens or escalate privileges.
-
-🔑 **Keywords/Phrases:** `session cookie`, `Cookie tampering`, `auth cookie`
+**Purpose:** Identifies the client software (browser name, version, OS).
 
 ```
-Cookie: session=eyJ1c2VyIjoiYWxpY2UifQ==
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) ...
 ```
 
-### 5. **Authorization**
+**CTF Relevance:** Challenges may require a specific UA string (e.g., `Googlebot`, `PicoBrowser`, or a custom string) to access restricted content.
 
-📌 **What it is:** Authentication credentials (Basic, Bearer/JWT).
-
-🕵️ **CTF Relevance:** Decoding or replaying tokens can bypass auth.
-
-🔑 **Keywords/Phrases:** `Basic Auth`, `Bearer token`, `Authorization header`
-
-```
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+```bash
+curl -H "User-Agent: PicoBrowser" http://target.com/
+curl -H "User-Agent: Googlebot/2.1" http://target.com/
 ```
 
-### 6. **X-Forwarded-For**
+---
 
-📌 **What it is:** Original client IP via proxy.
+### 3. Referer
 
-🕵️ **CTF Relevance:** Spoofing IP to bypass restrictions.
-
-🔑 **Keywords/Phrases:** `XFF`, `spoof IP`, `bypass IP restriction`
+**Purpose:** Indicates the originating page URL of the current request.
 
 ```
-X-Forwarded-For: 127.0.0.1
+Referer: https://www.google.com/
 ```
 
-### 7. **Content-Type**
+**CTF Relevance:** Some pages only load if accessed "from" a specific page or domain. Setting the Referer header bypasses these checks.
 
-📌 **What it is:** It is a entity type header. It is used to indicate the media type of the resource. The media type is a string sent along with the file indicating the format of the file.
+```bash
+curl -H "Referer: http://target.com/login" http://target.com/admin
+```
 
-🕵️ **CTF Relevance:** Change to bypass file upload validation or API parsing.
+---
 
-🔑 **Keywords/Phrases:** `MIME type`, `Content-Type trick`, `file upload`
+### 4. Cookie
+
+**Purpose:** Sends stored cookies to the server for session management.
+
+```
+Cookie: session_id=abc123; isAdmin=false
+```
+
+**CTF Relevance:** Cookie manipulation is one of the most common CTF web exploitation techniques — change values, forge session tokens, or set unexpected flags.
+
+```bash
+curl -H "Cookie: isAdmin=true; session=abc123" http://target.com/
+```
+
+---
+
+### 5. Authorization
+
+**Purpose:** Provides credentials for HTTP authentication.
+
+```
+Authorization: Basic dXNlcjpwYXNz
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+**CTF Relevance:** Basic auth is Base64-encoded (not encrypted). Bearer tokens (JWTs) can be decoded and sometimes forged with weak keys.
+
+```bash
+# Basic auth
+curl -u admin:password http://target.com/
+# OR
+curl -H "Authorization: Basic YWRtaW46cGFzc3dvcmQ=" http://target.com/
+
+# Bearer token
+curl -H "Authorization: Bearer <jwt_token>" http://target.com/api/flag
+```
+
+---
+
+### 6. X-Forwarded-For
+
+**Purpose:** Added by proxies to preserve the original client IP address.
+
+```
+X-Forwarded-For: 203.0.113.195
+```
+
+**CTF Relevance:** Servers that trust this header for IP-based geolocation or access control can be fooled by spoofing a different IP (e.g., an internal IP or country-specific address).
+
+```bash
+curl -H "X-Forwarded-For: 127.0.0.1" http://target.com/admin
+curl -H "X-Forwarded-For: 31.3.152.55" http://target.com/  # Swedish IP
+```
+
+---
+
+### 7. Content-Type
+
+**Purpose:** Indicates the media type of the request body.
 
 ```
 Content-Type: application/json
+Content-Type: application/x-www-form-urlencoded
+Content-Type: multipart/form-data
 ```
 
-### 8. **Content-Length**
+**CTF Relevance:** Changing the Content-Type header can trick servers into processing data differently, enable file upload bypass tricks, or trigger alternative code paths.
 
-📌 **What it is:** Size of request body in bytes.
-
-🕵️ **CTF Relevance:** Key in HTTP request smuggling/desync attacks.
-
-🔑 **Keywords/Phrases:** `request smuggling`, `CL-TE`, `desync`
-
-```
-Content-Length: 349
+```bash
+curl -X POST -H "Content-Type: application/json"      -d '{"username":"admin","password":"pass"}' http://target.com/login
 ```
 
-### 9. **Accept / Accept-Language**
+---
 
-📌 **What it is:** Preferred response format and language.
+### 8. Content-Length
 
-🕵️ **CTF Relevance:** May reveal hidden content by changing language or format.
-
-🔑 **Keywords/Phrases:** `Accept header`, `language-based content`, `hidden language flag`
+**Purpose:** Specifies the size (in bytes) of the request body.
 
 ```
-Accept-Language: fr-FR
+Content-Length: 42
 ```
 
-### 10. **Origin**
+**CTF Relevance:** Request smuggling attacks exploit inconsistencies between `Content-Length` and `Transfer-Encoding` headers. Also used in file upload bypass scenarios.
 
-📌 **What it is:** Scheme + host + port of request origin (CORS).
+---
 
-🕵️ **CTF Relevance:** Forging `Origin` may expose CORS misconfigurations.
+### 9. Accept-Language
 
-🔑 **Keywords/Phrases:** `CORS`, `Origin header`, `Access-Control-Allow-Origin`
-
-```
-Origin: http://evil.example
-```
-
-### 11. **Access-Control-Allow-Origin**
-
-📌 **What it is:** Response header that specifies allowed origins.
-
-🕵️ **CTF Relevance:** `*` or reflected origins can leak sensitive responses.
-
-🔑 **Keywords/Phrases:** `CORS misconfiguration`, `ACA0`, `Access-Control`
+**Purpose:** Specifies the preferred language(s) for the response.
 
 ```
-Access-Control-Allow-Origin: *
+Accept-Language: en-US,en;q=0.9
+Accept-Language: sv,en;q=0.9
 ```
 
-### 12. **Content-Security-Policy (CSP)**
+**CTF Relevance:** Geolocation or locale checks in challenges may require matching a specific language/country code.
 
-📌 **What it is:** It is response-type header that is used to allows web site administrators to control resources.
-
-🕵️ **CTF Relevance:** Weak CSP or allowed nonce/hash values help bypass XSS.
-
-🔑 **Keywords/Phrases:** `CSP`, `unsafe-inline`, `nonce`
-
-```
-Content-Security-Policy: default-src 'self'; script-src 'nonce-abc123'
+```bash
+curl -H "Accept-Language: sv,en;q=0.9" http://target.com/
 ```
 
-### 13. **X-Frame-Options**
+---
 
-📌 **What it is:** Controls framing (`DENY`, `SAMEORIGIN`, `ALLOW-FROM`).
+### 10. Origin
 
-🕵️ **CTF Relevance:** Clickjacking protection; missing header may allow framing attacks.
-
-🔑 **Keywords/Phrases:** `clickjacking`, `iframe`, `X-Frame-Options`
+**Purpose:** Indicates the origin (scheme+host+port) of a cross-origin request.
 
 ```
-X-Frame-Options: DENY
+Origin: https://attacker.com
 ```
 
-### 14. **Cache-Control / Pragma**
+**CTF Relevance:** CORS misconfiguration testing — if the server reflects arbitrary `Origin` values in `Access-Control-Allow-Origin`, it may enable cross-origin data theft.
 
-📌 **What it is:** Instructions for caching.
-
-🕵️ **CTF Relevance:** Cache poisoning or stale responses can reveal sensitive info.
-
-🔑 **Keywords/Phrases:** `cache poisoning`, `Vary`, `stale-while-revalidate`
-
-```
-Cache-Control: public, max-age=3600
+```bash
+curl -H "Origin: https://evil.com" http://target.com/api/data
 ```
 
-### 15. **Location**
+---
 
-📌 **What it is:** Redirect URL.
+### 11. DNT (Do Not Track)
 
-🕵️ **CTF Relevance:** Open redirects can be abused in phishing or auth-bypass scenarios.
-
-🔑 **Keywords/Phrases:** `open redirect`, `redirect`, `Location header`
+**Purpose:** Signals the user's tracking preference.
 
 ```
-Location: https://example.com/next
+DNT: 1   (Do Not Track enabled)
+DNT: 0   (Do Not Track disabled)
 ```
 
-### 16. **Range**
+**CTF Relevance:** Some challenge servers check for this header as part of identity verification.
 
-📌 **What it is:** Request a specific byte range of a resource.
-
-🕵️ **CTF Relevance:** Can leak partial file contents if server mishandles.
-
-🔑 **Keywords/Phrases:** `byte range`, `partial response`, `Range header`
-
-```
-Range: bytes=0-1023
+```bash
+curl -H "DNT: 1" http://target.com/
 ```
 
-### 17. **Accept-Encoding**
+---
 
-📌 **What it is:** Supported compression algorithms.
+### 12. Date
 
-🕵️ **CTF Relevance:** Enables compression-based attacks (BREACH/CRIME) or response-size oracles.
-
-🔑 **Keywords/Phrases:** `compression oracle`, `gzip`, `BREACH`
+**Purpose:** Specifies the date and time at which the message was sent.
 
 ```
-Accept-Encoding: gzip, deflate
+Date: Wed, 27 Jun 2018 03:05:00 GMT
 ```
 
-### 18. **X-Requested-With**
+**CTF Relevance:** Some challenge servers check the request date, requiring a date in the past or a specific historical date.
 
-📌 **What it is:** AJAX request indicator (`XMLHttpRequest`).
+```bash
+curl -H "Date: Wed, 27 Jun 2018 03:05:00 GMT" http://target.com/
+```
 
-🕵️ **CTF Relevance:** Some endpoints respond only to AJAX requests.
+---
 
-🔑 **Keywords/Phrases:** `XHR`, `AJAX only`, `X-Requested-With`
+### 13. X-Requested-With
+
+**Purpose:** Often used to identify AJAX requests.
 
 ```
 X-Requested-With: XMLHttpRequest
 ```
 
-### 19. **X-Api-Key / X-Auth-Token**
+**CTF Relevance:** Servers may return different content for AJAX vs. normal requests, revealing additional data in JSON format.
 
-📌 **What it is:** Developer-defined headers for API keys or tokens.
-
-🕵️ **CTF Relevance:** Hardcoded or leaked keys provide API access or reveal flags.
-
-🔑 **Keywords/Phrases:** `X-Api-Key`, `X-Auth-Token`, `custom header`
-
+```bash
+curl -H "X-Requested-With: XMLHttpRequest" http://target.com/api/
 ```
-X-Api-Key: abc123
-```
-
-### 20. **Server / Via / X-Powered-By**
-
-📌 **What it is:** Reveals server/proxy/framework info.
-
-🕵️ **CTF Relevance:** Fingerprinting helps identify known vulnerabilities.
-
-🔑 **Keywords/Phrases:** `fingerprint`, `server info`, `nginx, Apache, Express`
-
-```
-Server: nginx/1.22.0
-```
-
 
 ---
 
-### 21. **Date**
+### 14. X-Api-Key
 
-📌 **What it is:** Indicates the date and time at which the response was generated by the server (usually in GMT/UTC).
-
-🕵️ **CTF Relevance:**  Can help in timing attacks, checking server timezone, or debugging request/response sequences. Sometimes used to detect cached or stale content.
-
-🔑 **Keywords/Phrases:**
-- "server date"
-- "response time"
-- "GMT/UTC timestamp"
+**Purpose:** API authentication token passed as a header.
 
 ```
-Date: Fri, 12 Sep 2025 18:45:00 GMT
+X-Api-Key: abc123secretkey
 ```
 
-### 22. **DNT**
+**CTF Relevance:** API keys may be hardcoded in JavaScript source, leaked in git history, or forced through wordlist attacks.
 
-📌 **What it is:** A request header that signals the user's tracking preference to the server.  
-`DNT: 1` means the user does not want to be tracked; `DNT: 0` means tracking is allowed.
+---
 
-🕵️ **CTF Relevance:** Rarely affects CTF challenges directly, but in privacy or web-security challenges, checking or bypassing DNT settings can reveal how the server handles user tracking or analytics scripts. It can also help in flagging misconfigured privacy controls.
+## Response Headers
 
-🔑 **Keywords/Phrases:**
-- "Do Not Track"
-- "DNT"
-- "tracking preference"
+### 15. Access-Control-Allow-Origin
+
+**Purpose:** CORS response header specifying which origins can access the resource.
 
 ```
-DNT: 1
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: https://trusted-site.com
 ```
 
+**CTF Relevance:** `*` or reflected origin allows cross-site data theft via malicious JavaScript.
 
-![response-header](https://cdn.prod.website-files.com/5ff66329429d880392f6cba2/6720dff9eada99162c95b2ec_6720d2c58ff16c446d5835c4_4%2520-%252029.10-min.jpeg)
+---
 
-## Quick Usage Tips (copyable)
+### 16. Content-Security-Policy (CSP)
 
-- Change `Host` with curl:
+**Purpose:** Defines allowed content sources to prevent XSS and injection attacks.
+
+```
+Content-Security-Policy: default-src 'self'; script-src 'nonce-abc123'
+```
+
+**CTF Relevance:** Weak CSP policies (e.g., `unsafe-inline`, wildcard `*`, or allowed CDN domains with JSONP) enable XSS exploitation even when CSP is present.
+
+---
+
+### 17. X-Frame-Options
+
+**Purpose:** Controls whether the page can be embedded in iframes.
+
+```
+X-Frame-Options: DENY
+X-Frame-Options: SAMEORIGIN
+```
+
+**CTF Relevance:** Missing or permissive X-Frame-Options enables clickjacking attacks.
+
+---
+
+### 18. Cache-Control
+
+**Purpose:** Directives for caching behavior by browsers and proxies.
+
+```
+Cache-Control: no-store, no-cache
+Cache-Control: public, max-age=3600
+```
+
+**CTF Relevance:** Sensitive responses without `no-store` may be cached and accessible from cache endpoints.
+
+---
+
+### 19. Location
+
+**Purpose:** Redirect URL — used with 3xx responses.
+
+```
+Location: /dashboard
+```
+
+**CTF Relevance:** Some challenges hide content accessible only when following redirects. Use `curl -L` to follow.
 
 ```bash
-curl -s -H "Host: admin.example.com" https://1.2.3.4/
+curl -L http://target.com/redirect-to-flag
 ```
 
-- Spoof Referer & User-Agent:
+---
+
+### 20. Server / Via / X-Powered-By
+
+**Purpose:** Discloses server software and version.
+
+```
+Server: Apache/2.4.41 (Ubuntu)
+X-Powered-By: PHP/7.4.3
+```
+
+**CTF Relevance:** Version information enables targeted exploit research for known CVEs.
+
+---
+
+### 21. Range
+
+**Purpose:** Requests a specific byte range of a resource (partial content).
+
+```
+Range: bytes=0-999
+```
+
+**CTF Relevance:** Some challenges require fetching specific byte offsets of a file to reveal hidden data appended at unusual offsets.
 
 ```bash
-curl -s -H "Referer: https://example.com/allowed" -A "Googlebot/2.1" https://example.com/secret
+curl -H "Range: bytes=100-200" http://target.com/file.txt
 ```
 
-- Pretend to be localhost (XFF):
+---
+
+### 22. Accept-Encoding
+
+**Purpose:** Acceptable content encodings for the response.
+
+```
+Accept-Encoding: gzip, deflate, br
+```
+
+**CTF Relevance:** Disabling compression can clarify response content for analysis; some server-side compression logic has had exploitable vulnerabilities (e.g., CRIME, BREACH attacks).
+
+---
+
+## Quick Reference: curl Header Syntax
 
 ```bash
-curl -s -H "X-Forwarded-For: 127.0.0.1" https://example.com/admin
+# Single header
+curl -H "Header-Name: value" URL
+
+# Multiple headers
+curl -H "Header1: val1" -H "Header2: val2" URL
+
+# POST with JSON body
+curl -X POST -H "Content-Type: application/json" -d '{"key":"value"}' URL
+
+# Follow redirects
+curl -L URL
+
+# Show response headers
+curl -I URL
+curl -v URL
 ```
 
-- Edit cookies in Burp: send request to Repeater, modify `Cookie:` header, resend.
+---
+
+## Conclusion
+
+Mastery of HTTP headers is a force multiplier in web exploitation CTF challenges. Most header-based vulnerabilities share a common root cause: servers trust client-supplied data without validation. Keeping this cheatsheet handy and systematically trying header manipulations when stuck on web challenges will consistently reveal new attack surfaces.
+
+---
+
+## References
+
+- [MDN Web Docs — HTTP Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers)
+- [OWASP — Testing for HTTP Security Headers](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/01-Testing_for_Reflected_Cross_Site_Scripting)
+- [curl Documentation](https://curl.se/docs/manpage.html)
+- [PortSwigger — HTTP Request Smuggling](https://portswigger.net/web-security/request-smuggling)

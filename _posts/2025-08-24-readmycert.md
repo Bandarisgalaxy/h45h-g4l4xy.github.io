@@ -2,119 +2,161 @@
 layout: post
 title: "ReadMyCert"
 date: 2025-08-24
-categories: [PicoCTF, cryptography]
-tags: [picoctf, cryptography,ctf,Medium]
+categories: [PicoCTF, Cryptography]
+tags: [picoctf, cryptography, PKI, CSR, openssl, certificates, ctf, Medium]
+author: Harshith
+description: A PicoCTF cryptography challenge extracting a hidden flag embedded inside a Certificate Signing Request (CSR) file using OpenSSL command-line tools.
+toc: true
 ---
 
-## 🔐 ReadMyCert
+## Introduction
 
-### 📌 Challenge Description
-How about we take you on an adventure on exploring certificate signing requests?  
-Take a look at this CSR file here.
+The **ReadMyCert** challenge on PicoCTF introduces X.509 Certificate Signing Requests (CSRs) and the OpenSSL toolkit. CSRs are standard components of Public Key Infrastructure (PKI) used to apply for SSL/TLS certificates. In this challenge, a flag is hidden inside the metadata fields of a `.csr` file, demonstrating how certificate metadata can contain arbitrary strings.
 
----
-
-### 🧑‍💻 Prerequisites
-Before solving this challenge, you should be familiar with:
-
-1. **What is a CSR (Certificate Signing Request)?**
-   - A CSR is a block of encoded text sent to a Certificate Authority (CA) when applying for an SSL certificate.  
-   - It contains information like:
-     - **Common Name (CN)** → domain or identifier
-     - **Organization (O)**
-     - **Country (C)**
-     - **Public Key**
-     - **How it is Working?**
-   ![CA-Works](https://www.eetimes.com/wp-content/uploads/media-1121045-2011-12-05-crh-arora-freescale-encryption-fig2.gif)
-
-2. **What is OpenSSL?**
-   - OpenSSL is an open-source toolkit for **TLS/SSL protocols**.
-   - It allows you to:
-     - Generate private keys
-     - Create CSRs
-     - Decode/inspect certificates
-     - Encrypt/Decrypt data
-
-3. **Linux Command Line Basics**
-   - Familiarity with `wget`, `ls`, and running commands in a terminal.
+> **Challenge Description:** "How about we take you on an adventure on exploring certificate signing requests? Take a look at this CSR file here."
 
 ---
 
-### 🚀 Approach
-1. Copy the CSR file link and download it:
-   ```bash
-   wget https://artifacts.picoctf.net/c/425/readmycert.csr
-   ```
+## Challenge Overview
 
-2. List files to confirm:
-   ```bash
-   ls
-   ```
-   You’ll see `readmycert.csr`.
-
-3. Use OpenSSL to read the CSR contents:
-   ```bash
-   openssl req -in readmycert.csr -noout -text
-   ```
-
-   **Explanation of flags:**
-   - `req` → process certificate requests
-   - `-in readmycert.csr` → input file is the CSR
-   - `-noout` → do not output the encoded CSR
-   - `-text` → display the CSR in human-readable text
-
-4. Look under the **Subject → CN (Common Name)** field.  
-   You’ll find the flag inside.
+| Field | Details |
+|---|---|
+| **Platform** | PicoCTF |
+| **Category** | Cryptography |
+| **Difficulty** | Medium |
+| **Technique** | PKI/CSR Inspection with OpenSSL |
 
 ---
 
-### 🏁 Final Flag
+## Environment Setup
+
+**Required Tools:**
+- Linux terminal
+- `openssl` command-line toolkit (pre-installed on most Linux distributions)
+- `wget` for downloading the file
+
+---
+
+## Background: Understanding CSRs
+
+A **Certificate Signing Request (CSR)** is a structured, base64-PEM encoded file submitted to a Certificate Authority (CA) to request a signed SSL/TLS certificate. It contains:
+
+- **Subject fields:** Common Name (CN), Organization (O), Country (C), etc.
+- **Public Key:** The applicant's public key
+- **Signature:** Signed with the applicant's private key to prove ownership
+
+| File Extension | Description |
+|---|---|
+| `.csr` | Certificate Signing Request |
+| `.crt` / `.pem` | Signed certificate |
+| `.key` | Private key |
+| `.p12` / `.pfx` | PKCS#12 (certificate + private key bundle) |
+
+---
+
+## Solution Walkthrough
+
+### Step 1: Download the CSR File
+
+```bash
+wget https://artifacts.picoctf.net/c/425/readmycert.csr
+```
+
+### Step 2: Inspect the Downloaded File
+
+```bash
+ls
+# readmycert.csr
+```
+
+### Step 3: Decode the CSR with OpenSSL
+
+```bash
+openssl req -in readmycert.csr -noout -text
+```
+
+**Flag breakdown:**
+
+| Flag | Purpose |
+|---|---|
+| `req` | Work with certificate requests (CSRs) |
+| `-in readmycert.csr` | Specify the input CSR file |
+| `-noout` | Do not print the encoded (PEM) representation |
+| `-text` | Output the CSR in human-readable text format |
+
+### Step 4: Find the Flag in the Output
+
+The command outputs all CSR fields in readable format. Look in the **Subject** section for the **Common Name (CN)** field:
+
+```
+Certificate Request:
+    Data:
+        Version: 1 (0x0)
+        Subject: CN=picoCTF{read_mycert_693f7c03},
+                 C=US, ST=PA, L=Pittsburgh,
+                 O=Carnegie Mellon University,
+                 OU=Networking Lab
+```
+
+The CN field contains the flag directly.
+
+---
+
+## Key Concepts
+
+**How to Handle Certificate Files in CTFs:**
+
+For different certificate-related files, use these OpenSSL commands:
+
+```bash
+# Inspect a CSR:
+openssl req -in file.csr -noout -text
+
+# Inspect a signed certificate:
+openssl x509 -in file.crt -noout -text
+
+# Inspect a private key:
+openssl rsa -in file.key -check
+
+# Extract all fields from a certificate:
+openssl x509 -in file.crt -noout -subject -issuer -dates
+```
+
+**Fields to Look For in CTF Challenges:**
+
+- `CN` (Common Name) — often contains the flag or a path to it
+- `OU` (Organizational Unit) — can contain encoded data
+- `SAN` (Subject Alternative Names) — extended field, often checked
+- `emailAddress` — sometimes contains encoded strings
+
+---
+
+## Flag
+
 ```
 picoCTF{read_mycert_693f7c03}
 ```
 
 ---
 
-### 📝 Key Takeaways
-- A **CSR** is used to request a certificate from a Certificate Authority and contains identifying information.  
-- The **CN (Common Name)** is often the hostname or unique identifier – here, it hid the PicoCTF flag.  
-- The `openssl` tool is essential for working with cryptography challenges involving certificates.  
-- Important command breakdown:
-  - `openssl req` → work with certificate requests
-  - `-text` → decode into human-readable format
-  - `-noout` → prevents printing encoded version  
+## Security Insights
 
-👉 **How to Handle Certificate-Based CTF Challenges**  
-When you encounter `.csr`, `.crt`, `.pem`, or `.key` files in CTF challenges:  
-1. **Identify the file type**  
-   - `.csr` → Certificate Signing Request  
-   - `.crt` / `.pem` → Certificate file  
-   - `.key` → Private key  
-   - `.p12` / `.pfx` → PKCS#12 archive (may contain private key + certificate)  
+- **CSR metadata is fully controlled by the requester:** Any string can be placed in the CN, O, or OU fields. CAs may or may not verify the accuracy of these fields.
+- **Never trust CN for security decisions:** Using CN for authentication (e.g., matching hostnames) without proper certificate chain validation and SANs is a well-known vulnerability.
+- **Certificate transparency logs are public:** All issued certificates are logged in public Certificate Transparency (CT) logs — making certificate metadata permanently public and searchable.
+- **Inspect certificates during penetration testing:** Certificate metadata often reveals internal hostnames, organizational structure, and development environment details.
 
-2. **Inspect the file with OpenSSL**  
-   - For CSR:  
-     ```bash
-     openssl req -in file.csr -noout -text
-     ```
-   - For Certificate:  
-     ```bash
-     openssl x509 -in file.crt -noout -text
-     ```
-   - For Private Key:  
-     ```bash
-     openssl rsa -in file.key -check
-     ```
+---
 
-3. **Look for hidden clues in fields like:**  
-   - **CN (Common Name)**  
-   - **OU (Organizational Unit)**  
-   - **O (Organization)**  
-   - **Email Address**  
-   - **Subject Alternative Names (SANs)**  
+## Conclusion
 
-4. **Check for anomalies**  
-   - Strange values or strings in these fields often contain the flag.  
+ReadMyCert teaches the fundamentals of X.509 PKI infrastructure and demonstrates OpenSSL as an essential forensic tool for certificate inspection. In real-world security engagements, certificate metadata frequently reveals information about internal infrastructure — making OpenSSL certificate inspection a standard reconnaissance technique.
 
-👉 In summary:  
-Whenever you see certificate-related files in a CTF, **decode them with OpenSSL** and **read all metadata fields carefully**. The flag is usually hidden in **CN, OU, or SAN** fields.
+---
+
+## References
+
+- [OpenSSL Documentation](https://www.openssl.org/docs/)
+- [RFC 5280 — X.509 Certificate Profile](https://tools.ietf.org/html/rfc5280)
+- [Certificate Transparency — Google](https://certificate.transparency.dev/)
+- [PicoCTF Official Platform](https://picoctf.org)

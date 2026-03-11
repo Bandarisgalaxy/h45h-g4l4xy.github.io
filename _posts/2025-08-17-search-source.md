@@ -2,114 +2,157 @@
 layout: post
 title: "Search Source"
 date: 2025-08-17
-categories: [PicoCTF, webexploitation]
-tags: [picoctf, webexploitation,Medium]
----
-## 🔍 Challenge Name: Search Source
-
-### 📌 Challenge Description
-The developer of this website accidentally left an important clue in the **website source**. Your task is to find it and get the flag.
-
-**Hint:**  
-How could you mirror (download) the website on your local machine so you can search it more easily?
-
+categories: [PicoCTF, Web Exploitation]
+tags: [picoctf, webexploitation, source-review, wget, css, reconnaissance, ctf, Medium]
+author: Harshith
+description: A PicoCTF web exploitation challenge where the flag is hidden inside a CSS file, discovered by mirroring the entire website with wget and performing a recursive search.
+toc: true
 ---
 
-## 🛠️ Approach
+## Introduction
 
-#### 1. Open the Website
-Go to the challenge link in your browser.
+The **Search Source** challenge on PicoCTF demonstrates that flags and sensitive data can be hidden in **non-HTML resources** like CSS stylesheets, JavaScript files, and images. Instead of manually clicking through every linked file, this challenge teaches an efficient technique — mirroring the entire website locally and then using fast search tools to scan every file at once.
+
+> **Challenge Description:** "The developer of this website accidentally left an important clue in the website source. Your task is to find it and get the flag."
+>
+> **Hint:** "How could you mirror (download) the website on your local machine so you can search it more easily?"
 
 ---
 
-#### 2. Check the Page Source
-Right-click → **View Page Source** or press `Ctrl + U`.  
-Then search (`Ctrl + F`) for common keywords like:
+## Challenge Overview
+
+| Field | Details |
+|---|---|
+| **Platform** | PicoCTF |
+| **Category** | Web Exploitation |
+| **Difficulty** | Medium |
+| **Technique** | Website Mirroring with wget, Recursive File Search |
+
+---
+
+## Environment Setup
+
+**Required Tools:**
+- Terminal with `wget` and `rg` (ripgrep) installed
+- Alternatively: `grep -r` as a fallback for `rg`
+
+```bash
+# Install ripgrep if needed
+sudo apt install ripgrep
+```
+
+---
+
+## Solution Walkthrough
+
+### Step 1: Open the Website
+
+Navigate to the challenge URL. The page looks like a standard website.
+
+### Step 2: Search the Main Page Source
+
+Press `Ctrl + U` to view the source. Search for common keywords:
 - `flag`
 - `pico`
 
-You’ll see a comment in the code:
+You will find a comment in the HTML:
+
+```html
+<!-- The flag is not here but keep digging :) -->
 ```
-The flag is not here but keep digging :)
-```
-This means the flag is not in the main HTML file.
 
----
+This means the flag is embedded in one of the additional resource files (CSS, JS, etc.), not the main HTML.
 
-#### 3. Look Into Other Files
-Flags are sometimes hidden inside other files such as:
-- `.css` files (stylesheets)  
-- `.js` files (scripts)  
-- Hidden pages  
+### Step 3: Mirror the Entire Website
 
-But checking them one by one is slow.
+Instead of manually opening each linked file, use `wget` to download the complete website:
 
----
-
-#### 4. Use the Hint (Mirror the Website)
-Instead of searching manually, we can **download the whole website** to our computer and search all files at once.
-
-Run this command in your terminal:
 ```bash
 wget -m -p -E -k -np http://saturn.picoctf.net:52685/
 ```
 
-This will:
-- `-m` → Mirror the website (download everything).  
-- `-p` → Get all files needed to view pages (images, CSS, etc.).  
-- `-E` → Convert file extensions to `.html` for local browsing.  
-- `-k` → Rewrite links so they work offline.  
-- `-np` → No parent (don’t go above the starting URL).  
+**Flag Explanation:**
 
-Now a folder named `saturn.picoctf.net:52685/` will be created with all files.
+| Flag | Meaning |
+|---|---|
+| `-m` | Mirror mode — download everything recursively |
+| `-p` | Download all page requisites (CSS, images, JS) |
+| `-E` | Adjust file extensions to `.html` for local browsing |
+| `-k` | Rewrite links for offline use |
+| `-np` | No-parent: stay within the starting URL |
 
----
+A directory named `saturn.picoctf.net:52685/` will be created with all downloaded files.
 
-#### 5. Search for the Flag
-Go into the folder:
+### Step 4: Search All Files for the Flag
+
+Navigate into the mirrored directory and search for the flag prefix:
+
 ```bash
 cd saturn.picoctf.net:52685/
-```
-
-Search inside all files for “picoCTF”:
-```bash
 rg picoCTF
 ```
 
----
+Or using standard `grep`:
 
-#### 6. Find the Flag
-You’ll get output like:
+```bash
+grep -r "picoCTF" .
+```
+
+### Step 5: Locate the Flag
+
+The search output will show:
+
 ```
 css/style.css
 328:/** banner_main picoCTF{1nsp3ti0n_0f_w3bpag3s_ec95fa49} **/
 ```
 
-#### 🏁 Final Answer
-**picoCTF{1nsp3ti0n_0f_w3bpag3s_ec95fa49}**
+The flag was hidden inside a CSS comment on line 328 of `style.css`.
 
 ---
 
-## 📖 Command Explanations
+## Key Concepts
 
-### `wget`
-`wget` is used to **download files from the web**.
-- `-m` → Mirror website (download everything).  
-- `-p` → Download all necessary resources.  
-- `-E` → Adjust file extensions to `.html`.  
-- `-k` → Fix links for offline browsing.  
-- `-np` → Prevent downloading parent directories.
+**Why CSS Files Can Contain Sensitive Data:**
 
-### `cd`
-`cd` = Change Directory → move into the downloaded folder.
+CSS comments (`/** ... **/` or `/* ... */`) are not rendered visually in the browser but are included in the full HTTP response body. Any data embedded in comments is fully visible to anyone who downloads the CSS file or views the browser's Network tab.
 
-### `rg` 
-- `rg` stands for **ripgrep**, a fast search tool.  
-- It searches through all files and shows lines containing the word.
-Here we used:
+**Efficient Search with ripgrep:**
+
 ```bash
-rg picoCTF
+rg picoCTF           # Search all files for flag prefix
+rg -l picoCTF        # List only filenames containing the match
+rg -n picoCTF        # Show line numbers with matches
 ```
-to find any line containing “picoCTF”.
 
 ---
+
+## Flag
+
+```
+picoCTF{1nsp3ti0n_0f_w3bpag3s_ec95fa49}
+```
+
+---
+
+## Security Insights
+
+- **CSS/JS comments are not private:** Any comment in a stylesheet or script is delivered verbatim to every browser that loads the page.
+- **Strip debug artifacts before deployment:** Remove all developer comments, `console.log()` statements, and debug markers before pushing to production.
+- **Use file linting in CI/CD:** Automated pipeline checks can scan for patterns like `TODO`, `FIXME`, or credential-like strings in CSS and JS before deployment.
+- **Source map security:** Never deploy `.map` files to production — they expose the full original pre-minified source code.
+
+---
+
+## Conclusion
+
+This challenge reinforces that web source inspection extends beyond the main HTML document. Flags, credentials, and debug information can be hidden in any file served by the web application. Tools like `wget` and `rg` (ripgrep) enable efficient bulk analysis across every file in a web application's asset tree.
+
+---
+
+## References
+
+- [GNU wget Manual](https://www.gnu.org/software/wget/manual/wget.html)
+- [ripgrep GitHub](https://github.com/BurntSushi/ripgrep)
+- [OWASP — Information Exposure Through Comments](https://owasp.org/www-community/vulnerabilities/Information_exposure_through_query_strings_in_url)
+- [PicoCTF Official Platform](https://picoctf.org)
