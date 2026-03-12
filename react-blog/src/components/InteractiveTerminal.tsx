@@ -110,6 +110,7 @@ export default function InteractiveTerminal() {
   const bootStarted = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // ── Blinking cursor ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -164,9 +165,55 @@ export default function InteractiveTerminal() {
     }
   }, [lines, interactive]);
 
-  // Focus hidden input without moving the page at all
+  // ── Mobile keyboard handling — keep terminal visible ──────────────────────
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    let prevHeight = vv.height;
+
+    const handleResize = () => {
+      const heightDiff = prevHeight - vv.height;
+      // Keyboard opened if viewport shrank significantly (>150px)
+      if (heightDiff > 150 && containerRef.current && scrollRef.current) {
+        containerRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+      prevHeight = vv.height;
+    };
+
+    vv.addEventListener("resize", handleResize);
+    return () => vv.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Focus input — allow natural scroll on touch devices so keyboard can push terminal into view
   const focusInput = useCallback(() => {
-    inputRef.current?.focus({ preventScroll: true });
+    const isTouchDevice =
+      "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    inputRef.current?.focus({ preventScroll: !isTouchDevice });
+  }, []);
+
+  // ── Scroll terminal into view when input focused on mobile ────────────────
+  const handleInputFocus = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const isTouchDevice =
+      "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice && containerRef.current) {
+      // Delay to let keyboard start opening, then scroll
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      }, 300);
+    }
   }, []);
 
   // ── Process command ───────────────────────────────────────────────────────
@@ -300,7 +347,8 @@ export default function InteractiveTerminal() {
 
   return (
     <div
-      className="relative rounded-lg overflow-hidden w-full font-mono text-sm flex flex-col"
+      ref={containerRef}
+      className="relative rounded-lg overflow-hidden w-full font-mono text-sm flex flex-col terminal-container"
       style={{
         minHeight: 340,
         maxHeight: 420,
@@ -353,14 +401,20 @@ export default function InteractiveTerminal() {
         {interactive && (
           <div className="flex items-center mt-1">
             {/* prompt + typed text + cursor — all inline, cursor hugs the text */}
-            <div className="flex items-center flex-1 min-w-0 overflow-hidden">
+            <div
+              className="flex items-start flex-1 min-w-0 flex-wrap"
+              style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
+            >
               <span
                 className="flex-shrink-0 select-none whitespace-nowrap"
                 style={{ color: "#2255cc" }}
               >
                 h45h@cyberlab:~${" "}
               </span>
-              <span className="whitespace-pre" style={{ color: "#ffffff" }}>
+              <span
+                className="whitespace-pre-wrap break-all"
+                style={{ color: "#ffffff" }}
+              >
                 {inputVal}
               </span>
               <span
@@ -401,9 +455,9 @@ export default function InteractiveTerminal() {
         )}
       </div>
 
-      {/* Hidden real input. Off-screen (NOT zero-size) — width:0/height:0
-          causes browsers to put the cursor at pos 0, reversing typed text.
-          position:fixed left:-9999px keeps natural width → correct cursor. */}
+      {/* Hidden input — positioned absolutely inside the terminal so mobile
+          browsers can scroll to it when the keyboard opens. Full width keeps
+          natural cursor position (zero-size breaks some browsers). */}
       {interactive && (
         <form
           onSubmit={(e) => {
@@ -412,9 +466,12 @@ export default function InteractiveTerminal() {
             setInputVal("");
           }}
           style={{
-            position: "fixed",
-            left: "-9999px",
-            top: "-9999px",
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "100%",
+            height: "1px",
+            overflow: "hidden",
             opacity: 0,
             pointerEvents: "none",
           }}
@@ -424,12 +481,14 @@ export default function InteractiveTerminal() {
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
             onKeyDown={onKeyDown}
+            onFocus={handleInputFocus}
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
             enterKeyHint="send"
             aria-label="Terminal input"
+            style={{ fontSize: "16px", width: "100%" }}
           />
         </form>
       )}

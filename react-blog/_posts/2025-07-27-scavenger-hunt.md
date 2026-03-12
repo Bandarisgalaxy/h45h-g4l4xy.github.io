@@ -13,126 +13,38 @@ toc: true
 
 The **Scavenger Hunt** challenge on PicoCTF simulates a real web reconnaissance scenario. The flag is scattered across six different location types, each representing a common web asset that developers often overlook from a security perspective.
 
-> **Challenge Description:** "Find the flag hidden across multiple files on the website."
+---
+
+## 💡 Challenge Description  
+Find the flag hidden across multiple files on the website.
 
 ---
 
-## Challenge Overview
+## 🧭 Step-by-Step Approach  
 
-| Field | Details |
-|---|---|
-| **Platform** | PicoCTF |
-| **Category** | Web Exploitation |
-| **Difficulty** | Easy |
-| **Technique** | Web Reconnaissance, robots.txt, .htaccess, .DS_Store |
-
----
-
-## Environment Setup
-
-**Required Tools:**
-- A modern web browser (Chrome or Firefox)
-- Browser Developer Tools (`F12`)
-
-No additional software installation is required.
+- Open the challenge website.  
+- The homepage says that you should check HTML, CSS, and JavaScript files.  
+- Press **Ctrl + U** to view the page source.  
+- In the HTML source, you’ll find the **first part** of the flag.  
+- Open the linked **CSS file (`style.css`)** — it contains the **second part** of the flag.  
+- Open the linked **JavaScript file (`script.js`)** — it gives a hint:  
+  > *"How can I keep Google from indexing my website?"*  
+- This refers to the file **robots.txt**. Go to `/robots.txt` to find the **third part** of the flag.  
+- robots.txt gives another hint:  
+  > *"I think this is an apache server... can you Access the next flag?"*  
+- Apache servers use `.htaccess` files — try visiting the hinted path and access **`/.htaccess`** for the **fourth part**.  
+- This will show another clue:  
+  > *"I love making websites on my Mac, I can Store a lot of information there."*  
+- That refers to **`/.DS_Store`**, a macOS system file. Visit the hinted directory and open `.DS_Store` to find the **fifth and final part** of the flag.
 
 ---
 
-## Solution Walkthrough
+## 🎯 Final Flag 
+<pre> picoCTF{th4ts_4_l0t_0f_pl4c3s_2_lO0k_f7ce8828} </pre> 
 
-### Step 1: View the HTML Source (Part 1)
-
-Press `Ctrl + U` to view the page source. The **first part** of the flag is hidden in the HTML source.
-
-### Step 2: Open the CSS File (Part 2)
-
-Find the linked `style.css` file in the source. Open it directly in the browser — it contains the **second part** of the flag.
-
-### Step 3: Open the JavaScript File and Follow the Hint (Part 3)
-
-Find and open `script.js`. It contains the **third part** of the flag and leaves a hint:
-
-> *"How can I keep Google from indexing my website?"*
-
-This refers to `robots.txt`.
-
-### Step 4: Check `/robots.txt` (Part 3 Confirmed + Hint for Part 4)
-
-Navigate to:
-
-```
-<challenge_url>/robots.txt
-```
-
-This contains the **third part** of the flag and another hint about Apache server configuration:
-
-> *"I think this is an apache server... can you Access the next flag?"*
-
-### Step 5: Access `/.htaccess` (Part 4)
-
-Apache servers use `.htaccess` for configuration. Navigate to:
-
-```
-<challenge_url>/.htaccess
-```
-
-This reveals the **fourth part** of the flag and hints at macOS file storage.
-
-### Step 6: Access `/.DS_Store` (Part 5)
-
-`.DS_Store` is a macOS-generated directory metadata file. Navigate to:
-
-```
-<challenge_url>/.DS_Store
-```
-
-The **fifth and final part** of the flag is embedded inside.
-
-### Step 7: Combine All Parts
-
-Concatenate all five parts to form the complete flag.
 
 ---
 
-## Key Concepts
+> 🧠 **Learning Tip:**  
+> This challenge teaches web reconnaissance techniques, like looking at `robots.txt`, `.htaccess`, `.DS_Store`, and inspecting static files. Always explore every corner of a web app during CTFs!
 
-**Common Sensitive Web Files:**
-
-| File | Description | Security Risk |
-|---|---|---|
-| `robots.txt` | SEO instructions for crawlers | May expose hidden paths |
-| `.htaccess` | Apache server configuration | Can leak server config |
-| `.DS_Store` | macOS folder metadata | Can expose directory structure |
-| `.git/config` | Git repository config | May expose remote URLs |
-| `backup.zip` | Backup archives | May contain source code |
-
----
-
-## Flag
-
-```
-picoCTF{th4ts_4_l0t_0f_pl4c3s_2_lO0k_f7ce8828}
-```
-
----
-
-## Security Insights
-
-- **Deployment hygiene matters:** Files like `.DS_Store`, `.htaccess`, and `.git/` should always be excluded from public web deployments.
-- **`robots.txt` is public:** It is readable by anyone, attacker or crawler. Never put sensitive path names there.
-- **Apache misconfiguration** via exposed `.htaccess` files can reveal server-side rules and authentication bypass opportunities.
-- **Use `.gitignore` and CI/CD checks** to prevent sensitive system files from being deployed to production.
-
----
-
-## Conclusion
-
-This challenge demonstrates the breadth of information leakage possible through standard web file types. Real attackers routinely probe these locations during web reconnaissance. Security teams should implement automated checks to ensure no sensitive files are publicly accessible on their web servers.
-
----
-
-## References
-
-- [OWASP — Information Exposure Through Directory Listing](https://owasp.org/www-community/attacks/Directory_traversal)
-- [Apache .htaccess Documentation](https://httpd.apache.org/docs/current/howto/htaccess.html)
-- [PicoCTF Official Platform](https://picoctf.org)

@@ -348,6 +348,20 @@ code {
   margin-bottom: 1.4rem;
   color: #e2e8e2;
 }
+.prose ul {
+  list-style-type: disc;
+}
+.prose ol {
+  list-style-type: decimal;
+}
+/* Nested ordered lists: a, b, c … */
+.prose ol ol {
+  list-style-type: lower-alpha;
+}
+/* Third level: roman numerals */
+.prose ol ol ol {
+  list-style-type: lower-roman;
+}
 .prose li {
   margin-bottom: 0.5rem;
   line-height: 1.7;
@@ -357,6 +371,7 @@ code {
 }
 .prose ol > li::marker {
   color: var(--neon);
+  font-weight: 600;
 }
 
 /* Inline code — neon tint, subtle pill background */
@@ -558,5 +573,47 @@ html[data-first-visit] [data-page-content] {
   }
   50% {
     opacity: 0;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Mobile Terminal Responsiveness
+══════════════════════════════════════════════════════════════ */
+
+/* Constrain terminal height on mobile so it never overflows the screen */
+@media (max-width: 768px) {
+  .terminal-container {
+    max-height: 60vh !important;
+    min-height: 260px !important;
+  }
+}
+
+/* Very small viewports / landscape with keyboard */
+@media (max-height: 500px) {
+  .terminal-container {
+    max-height: 50vh !important;
+    min-height: 180px !important;
+  }
+}
+
+/* Ensure terminal text is selectable on mobile */
+.terminal-container * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Prevent horizontal overflow on all mobile elements */
+@media (max-width: 768px) {
+  .prose pre {
+    max-width: calc(100vw - 2rem);
+  }
+
+  .prose img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .prose table {
+    max-width: calc(100vw - 2rem);
   }
 }

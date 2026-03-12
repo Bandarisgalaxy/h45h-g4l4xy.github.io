@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
-const BASE_PATH = '/h45h-g4l4xy.github.io';
+const isProd = process.env.NODE_ENV === 'production';
+const BASE_PATH = isProd ? '/h45h-g4l4xy.github.io' : '';
 
 const nextConfig = {
   output: 'export',
@@ -9,8 +10,8 @@ const nextConfig = {
   },
   // Repo is "h45h-g4l4xy.github.io" under username "bandarisgalaxy"
   // → GitHub Pages serves it at: bandarisgalaxy.github.io/h45h-g4l4xy.github.io/
-  basePath: BASE_PATH,
-  assetPrefix: BASE_PATH,
+  basePath: BASE_PATH || undefined,
+  assetPrefix: BASE_PATH || undefined,
   // Expose basePath to client components (e.g. for markdown image src prefixing)
   env: {
     NEXT_PUBLIC_BASE_PATH: BASE_PATH,

@@ -60,6 +60,14 @@ export default function Footer() {
               >
                 <Github className="w-4 h-4" />
               </a>
+              <a
+                href="https://www.linkedin.com/in/bandari-harshith"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 border border-[#1a2a1a] rounded-lg text-[#3a5c3a] hover:text-[#00ff41] hover:border-[#00ff4133] transition-all"
+              >
+                <Linkedin className="w-4 h-4" />
+              </a>
             </div>
           </div>
         </div>

@@ -13,136 +13,96 @@ toc: true
 
 The **Substitution0** challenge on PicoCTF introduces monoalphabetic substitution ciphers — one of the oldest and most well-known classical cryptographic techniques. A substitution cipher replaces each letter of the plaintext with a different letter according to a fixed mapping. While simple to implement, it is trivially broken using frequency analysis or when the key is provided.
 
-> **Challenge Description:** "A message has come in but it seems to be all scrambled. Luckily it seems to have the key at the beginning. Can you crack this substitution cipher?"
+---
+
+## 🔎 Challenge Description
+A message has come in but it seems to be all scrambled. Luckily it seems to have the key at the beginning. Can you crack this substitution cipher?  
+
+**Hint:** Try a frequency attack. An online tool might help.
 
 ---
 
-## Challenge Overview
+## 🛠️ Approach
 
-| Field | Details |
-|---|---|
-| **Platform** | PicoCTF |
-| **Category** | Cryptography |
-| **Difficulty** | Medium |
-| **Technique** | Monoalphabetic Substitution Cipher, Frequency Analysis |
+1. Download the given file:
+   ```bash
+   wget https://artifacts.picoctf.net/c/152/message.txt
+   ```
 
----
+2. Open the file and check its contents:
+   ```
+   DECKFMYIQJRWTZPXGNABUSOLVH 
 
-## Environment Setup
+   Ifnfuxpz Wfyndzk dnpaf, oqbi d yndsf dzk abdbfwv dqn, dzk enpuyib tf bif effbwf
+   mnpt d ywdaa cdaf qz oiqci qb oda fzcwpafk. Qb oda d efdubqmuw acdndedfua, dzk, db
+   bidb bqtf, uzrzpoz bp zdbundwqaba—pm cpunaf d ynfdb xnqhf qz d acqfzbqmqc xpqzb
+   pm sqfo. Bifnf ofnf bop npuzk ewdcr axpba zfdn pzf flbnftqbv pm bif edcr, dzk d
+   wpzy pzf zfdn bif pbifn. Bif acdwfa ofnf flcffkqzywv idnk dzk ywpaav, oqbi dww bif
+   dxxfdndzcf pm eunzqaifk ypwk. Bif ofqyib pm bif qzafcb oda sfnv nftdnrdewf, dzk,
+   bdrqzy dww biqzya qzbp cpzaqkfndbqpz, Q cpuwk idnkwv ewdtf Juxqbfn mpn iqa pxqzqpz
+   nfaxfcbqzy qb.
 
-**Required Tools:**
-- Terminal with `wget`
-- Online tool: [Quipqiup](https://quipqiup.com/)
+   Bif mwdy qa: xqcpCBM{5UE5717U710Z_3S0WU710Z_59533D2F}
+   ```
 
----
+3. The first line (`DECKFMYIQJRWTZPXGNABUSOLVH`) looks like the **substitution key**.
 
-## Solution Walkthrough
+4. The challenge hint suggests **frequency analysis**. A great tool for solving such ciphers is **[Quipqiup](https://quipqiup.com/)**.
 
-### Step 1: Download the Encrypted File
+5. Copy the ciphertext and paste it into Quipqiup, then click **Solve**.
 
-```bash
-wget https://artifacts.picoctf.net/c/152/message.txt
-```
+6. The tool successfully decodes the message into proper English, revealing the flag.
 
-### Step 2: Inspect the File Contents
-
-Open the file. The first line is the substitution key:
-
-```
-DECKFMYIQJRWTZPXGNABUSOLVH
-```
-
-This maps the alphabet `A-Z` to `D-E-C-K-F-M-Y-I-Q-J-R-W-T-Z-P-X-G-N-A-B-U-S-O-L-V-H`.
-
-The remainder of the file is the encrypted message text.
-
-### Step 3: Understand the Substitution Key
-
-The key maps each plain alphabet letter to a cipher letter:
-
-```
-Plain : A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
-Cipher: D E C K F M Y I Q J R W T Z P X G N A B U S O L V H
-```
-
-To **decrypt**, reverse the mapping: each cipher letter maps back to its plain counterpart.
-
-### Step 4: Use Quipqiup to Solve
-
-1. Go to [Quipqiup](https://quipqiup.com/)
-2. Paste the ciphertext (not the key line) into the input box
-3. Click **Solve**
-
-The tool uses frequency analysis to automatically decode the substitution cipher, revealing proper English text and the flag.
-
-### Step 5: Read the Flag
-
-The flag is embedded at the bottom of the decoded message:
-
-```
-The flag is: picoCTF{5UE5717U710Z_3S0WU710Z_59533D2F}
-```
+## 🎯 Final Flag
+**picoCTF{SUBSTITUTION_EVOLUTION_59533A2E}**
 
 ---
 
-## Key Concepts
+---
 
-**Monoalphabetic Substitution Cipher:**
+## 🔑 Understanding the Substitution Key
 
-Each letter in the plaintext is replaced by exactly one other letter. The mapping is fixed throughout the entire message.
+The substitution key tells us how letters are scrambled.  
+Example mapping:  
 
 ```
-Encrypt: A=D, B=E, C=C ...  → "HELLO" → "IFWWX"
-Decrypt: D=A, E=B, C=C ...  → "IFWWX" → "HELLO"
+Plain : ABCDEFGHIJKLMNOPQRSTUVWXYZ
+Cipher: DECKFMYIQJRWTZPXGNABUSOLVH
 ```
 
-**Why It Is Weak:**
+- So **A → D**, **B → E**, **C → C**, etc.  
+- This was used to encrypt the long scrambled text.  
+- To decrypt, we invert the mapping.  
 
-English text has predictable letter frequency patterns:
-- Most common: `E`, `T`, `A`, `O`, `I`, `N`
-- Least common: `Z`, `Q`, `X`, `J`
-
-By counting letter frequencies in the ciphertext and matching them to known English frequencies, the mapping can be determined without knowing the key at all.
-
-**Leet-Speak in the Flag:**
-
-The flag characters use leet-speak number substitutions:
-
-| Number | Letter |
-|---|---|
-| 5 | S |
-| 7 | T |
-| 0 | O |
-| 1 | I |
-| 3 | E |
+👉 The key is only used for the **ciphertext message**, not the flag itself.
 
 ---
 
-## Flag
+## 🔡 The Flag Encoding Trick
 
+The flag part:
+```
+xqcpCBM{5UE5717U710Z_3S0WU710Z_59533D2F}
+```
+
+is not encrypted with the substitution key. Instead, it uses **leet-speak** (numbers representing letters):  
+
+- 5 → S  
+- 7 → T  
+- 0 → O  
+- 1 → I  
+- 3 → E  
+- 2 → Z  
+
+So the decoded flag is:  
 ```
 picoCTF{SUBSTITUTION_EVOLUTION_59533A2E}
 ```
 
 ---
 
-## Security Insights
-
-- **Monoalphabetic ciphers are broken by frequency analysis:** With enough ciphertext (typically 20+ characters), statistical attacks recover the full key without any brute force.
-- **Classical ciphers have no place in modern cryptography:** Real encryption uses mathematically hard problems (discrete logarithm, integer factorization, AES key recovery).
-- **Understanding classical ciphers builds intuition:** Vulnerability patterns in classical ciphers (key reuse, statistical weakness) recur in modern broken implementations.
+## ✅ Key Takeaway
+The substitution key was used for the ciphertext message, **but not for the flag part**.  
+The flag used **leet-speak obfuscation**, which is a separate trick.  
 
 ---
-
-## Conclusion
-
-Substitution0 teaches the core concept of monoalphabetic substitution and establishes the foundation for frequency analysis. Once you recognize that a fixed letter-to-letter mapping cannot hide statistical patterns in natural language, the weakness of all classical substitution ciphers becomes clear.
-
----
-
-## References
-
-- [Quipqiup — Substitution Cipher Solver](https://quipqiup.com/)
-- [dCode — Substitution Cipher](https://www.dcode.fr/substitution-cipher)
-- [Wikipedia — Frequency Analysis](https://en.wikipedia.org/wiki/Frequency_analysis)
-- [PicoCTF Official Platform](https://picoctf.org)

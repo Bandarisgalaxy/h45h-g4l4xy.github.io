@@ -13,143 +13,54 @@ toc: true
 
 The **Roboto Sans** challenge on PicoCTF highlights the importance of checking `robots.txt` during web reconnaissance. The `robots.txt` file is a standard web file used to communicate with web crawlers — but it frequently leaks internal file paths, directory structure, and in this case, an encoded flag.
 
-> **Challenge Description:** "The flag is hidden somewhere on this web application, but not necessarily on the visible website."
+---
+
+## 🔎 Challenge Description
+The flag is hidden somewhere on this web application, but not necessarily on the visible website.
 
 ---
 
-## Challenge Overview
+## 🛠️ Approach (Step by Step)
 
-| Field | Details |
-|---|---|
-| **Platform** | PicoCTF |
-| **Category** | Web Exploitation |
-| **Difficulty** | Medium |
-| **Technique** | robots.txt Reconnaissance, Base64 Decoding |
-
----
-
-## Environment Setup
-
-**Required Tools:**
-- A modern web browser (Chrome or Firefox)
-- Terminal with `base64` command (or any online Base64 decoder)
-
----
-
-## Reconnaissance
-
-### Step 1: Open the Website
-
-Navigate to the challenge URL. The challenge name **"Roboto Sans"** is a strong hint — it sounds like **robots.txt**.
-
-### Step 2: Check `robots.txt`
-
-Navigate to:
-
-```
-http://saturn.picoctf.net:50318/robots.txt
-```
-
-The file contains:
-
-```
-ZmxhZzEudHh0;anMvbXlmaW
-anMvbXlmaWxlLnR4dA==
-svssshjweuiwl;oiho.bsvdaslejg
-```
+1. I opened the given website.  
+2. The challenge name **"roboto sans"** gave me a clue – it sounds like **robots.txt** (a file often used to tell web crawlers which directories they can or can’t access).
+![roboto-sans](https://www.keycdn.com/img/support/robots.txt-file-lg.webp)  
+3. I checked the file at:  
+   ```
+   http://saturn.picoctf.net:50318/robots.txt
+   ```  
+4. The file showed some rules for crawlers. Inside it, I also found some suspicious text:  
+   ```
+   ZmxhZzEudHh0;anMvbXlmaW
+   anMvbXlmaWxlLnR4dA==
+   svssshjweuiwl;oiho.bsvdaslejg
+   ```  
+5. I noticed `==` at the end, which usually means **Base64 encoding**.  
+6. I decoded the string `anMvbXlmaWxlLnR4dA==` using:  
+   ```bash
+   echo "anMvbXlmaWxlLnR4dA==" | base64 -d
+   ```  
+   This gave the result:  
+   ```
+   js/myfile.txt
+   ```  
+7. I visited the file on the server:  
+   ```
+   http://saturn.picoctf.net:50318/js/myfile.txt
+   ```  
+8. Inside that file, I found the flag:  
+   ```
+   picoCTF{Who_D03sN7_L1k5_90B0T5_718c9043}
+   ```
 
 ---
 
-## Decoding the Flag Path
-
-### Step 3: Identify Base64 Encoding
-
-The string `anMvbXlmaWxlLnR4dA==` ends with `==` — a characteristic padding indicator of **Base64 encoding**.
-
-### Step 4: Decode the Base64 String
-
-```bash
-echo "anMvbXlmaWxlLnR4dA==" | base64 -d
-```
-
-**Output:**
-
-```
-js/myfile.txt
-```
-
-This is a file path hidden inside the `robots.txt` via Base64 encoding.
-
-### Step 5: Access the Hidden File
-
-Navigate to the decoded path on the server:
-
-```
-http://saturn.picoctf.net:50318/js/myfile.txt
-```
-
-The full flag is displayed in the file contents.
-
----
-
-## Key Concepts
-
-**What is `robots.txt`?**
-
-`robots.txt` is placed at the root of a web server to instruct web crawlers (like Googlebot) which paths they are allowed or disallowed from indexing:
-
-```
-User-agent: *
-Disallow: /admin/
-Disallow: /private/
-```
-
-**Security Implications:**
-
-- `robots.txt` is a **public file** — anyone can read it, not just crawlers.
-- Paths listed in `Disallow` are not hidden from humans — they often become a roadmap for attackers.
-- Sensitive paths should be protected by authentication, not just excluded from `robots.txt`.
-
-**Base64 Quick Reference:**
-
-```bash
-# Encode
-echo "js/myfile.txt" | base64
-# Output: anMvbXlmaWxlLnR4dAo=
-
-# Decode
-echo "anMvbXlmaWxlLnR4dA==" | base64 -d
-# Output: js/myfile.txt
-```
-
----
-
-## Flag
-
+## 🏁 Flag
 ```
 picoCTF{Who_D03sN7_L1k5_90B0T5_718c9043}
 ```
 
 ---
 
-## Security Insights
-
-- **`robots.txt` is not an access control mechanism:** Any path listed in `robots.txt` is publicly visible and becomes a list of interesting targets for attackers.
-- **Encode != Encrypt:** Base64 encoding is trivially reversible. It is NOT a security measure for protecting file paths.
-- **Authentication first:** Sensitive endpoints must require valid authentication. Obscuring the path is insufficient.
-- **Audit your `robots.txt`:** Never list internal admin panels, backup directories, or sensitive paths in `robots.txt`.
-
----
-
-## Conclusion
-
-Roboto Sans demonstrates that reconnaissance is often as simple as navigating to `/robots.txt`. Web developers who list sensitive directories in `robots.txt` (or obscure them with trivial encodings like Base64) are inadvertently providing attackers with a roadmap to hidden content. Proper access control — not obscurity — is the only reliable protection.
-
----
-
-## References
-
-- [Google — robots.txt Introduction](https://developers.google.com/search/docs/crawling-indexing/robots/intro)
-- [OWASP — robots.txt Testing](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/01-Conduct_Search_Engine_Discovery_Reconnaissance_for_Information_Leakage)
-- [Base64 Decode Online](https://www.base64decode.org/)
-- [PicoCTF Official Platform](https://picoctf.org)
+## 💡 Takeaway
+Always check **robots.txt** when a challenge hints at "robots" or when the description says the flag is not directly on the visible site. Sometimes hidden directories or encoded strings lead you to the flag.
