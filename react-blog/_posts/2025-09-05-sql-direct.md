@@ -16,6 +16,7 @@ The **SQL Direct** challenge on PicoCTF moves beyond vulnerable web forms and in
 ---
 
 ## 🐘Challenge Recap
+
 We need to connect to a **remote PostgreSQL database** and grab the flag.  
 
 **Details provided:**  
@@ -30,6 +31,7 @@ We need to connect to a **remote PostgreSQL database** and grab the flag.
 ---
 
 ## Why PostgreSQL Matters in Web Security
+
 Databases power almost every web app.  
 - Store **users, passwords, sessions, flags**  
 - If exposed → attackers can **dump sensitive data**  
@@ -40,6 +42,7 @@ Databases power almost every web app.
 ---
 
 ### 🛠️ Step 1: Installing the PostgreSQL Client  
+
 We need the `psql` client.  
 
 ##### Ubuntu / Debian  
@@ -64,6 +67,7 @@ psql --version
 ---
 
 ### 🛠️ Step 2: Connecting to the Remote Database  
+
 Command:  
 ```bash
 psql -h saturn.picoctf.net -p 50666 -U postgres pico
@@ -90,6 +94,7 @@ pico=#
 ---
 
 ### 🛠️ Step 3: Finding the Tables  
+
 Command:  
 ```sql
 \dt
@@ -110,7 +115,8 @@ Output:
 
 ---
 
-### 🛠️ Step 4: Extracting Data  
+### 🛠️ Step 4: Extracting Data 
+
 Query:  
 ```sql
 SELECT * FROM flags;
@@ -132,7 +138,8 @@ Result:
 
 ---
 
-### 🏁 Step 5: Capturing the Flag  
+### 🏁 Step 5: Capturing the Flag 
+
 🎯 Found in Luke Skywalker’s row:  
 **picoCTF{L3arN_S0m3_5qL_t0d4Y_31fd14c0}**
 
@@ -146,6 +153,7 @@ picoCTF{L3arN_S0m3_5qL_t0d4Y_31fd14c0}
 ---
 
 ## 📌 Key Security Takeaways  
+
 🔑 Direct database exposure = **high risk**  
 🔑 `\dt` (list tables) + `SELECT` (fetch data) = core exploration tools  
 🔑 Look for “odd” entries → often the flag  
@@ -167,6 +175,7 @@ picoCTF{L3arN_S0m3_5qL_t0d4Y_31fd14c0}
 ---
 
 ## 🎯 Final Thoughts  
+
 This challenge was not just about finding the flag—it was a **mini lesson in web security**.  
 
 🚀 Next time you face a DB challenge:  

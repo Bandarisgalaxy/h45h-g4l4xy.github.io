@@ -29,6 +29,7 @@ When you open the website, it starts rejecting you unless you provide the **corr
 ---
 
 ### 🌐 What are HTTP headers?
+
 When you visit a website, your browser sends a **request** to the server.  
 That request has:
 - The page you want

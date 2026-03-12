@@ -9,8 +9,6 @@ description: A step-by-step beginner-friendly lab where Kali Linux attacks a Win
 toc: true
 ---
 
-# 🤖 AI-Assisted Network Monitoring -- Basic Attack Simulation
-
 ## 🧭 Introduction
 
 In this lab, we perform a **basic AI-assisted network monitoring attack

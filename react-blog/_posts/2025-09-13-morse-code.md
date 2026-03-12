@@ -16,8 +16,10 @@ The **Morse-Code** challenge on PicoCTF introduces audio-based encoding. Rather 
 ---
 
 ## 🎹 Description:
+
 This challenge gives us a `.wav` file that contains Morse code.We need to decode it to find the flag.Wrap decoded text with picoCTF{}, put underscores in place of pauses, and use all lowercase.
 For more details on [Morsecode](https://www.geeksforgeeks.org/techtips/morse-code-tutorial/)
+
 ---
 
 ## 📝 Steps to Solve
@@ -34,6 +36,7 @@ This will save the file **morse_chal.wav** to your system.
 ---
 
 ### 2. Decode the Morse Audio
+
 Instead of decoding manually, we can use an online tool:
 
 👉 Go to: [MorseCode World Decoder](https://morsecode.world/international/decoder/audio-decoder-adaptive.html)
@@ -51,6 +54,7 @@ WH47 H47H 90D W20U9H7
 ---
 
 ### 3. Format According to Challenge Rules
+
 The challenge says:
 - Use **all lowercase**  
 - Replace **pauses/spaces** with underscores `_`  
@@ -70,6 +74,7 @@ wh47_h47h_90d_w20u9h7
 ---
 
 ### 4. Wrap with picoCTF{}
+
 Finally, put the result inside the flag format:
 
 ```
@@ -87,6 +92,7 @@ picoCTF{wh47_h47h_90d_w20u9h7}
 ---
 
 ## 🔑 Key Takeaways
+
 - Morse code is often hidden in audio files during CTF challenges.  
 - Online tools like **morsecode.world** make decoding fast and easy.  
 - Always follow flag format rules (lowercase, underscores, braces).  

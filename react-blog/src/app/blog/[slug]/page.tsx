@@ -83,7 +83,7 @@ export default function BlogPostPage({ params }: Props) {
           )}
 
           {/* Meta */}
-          <div className="flex flex-wrap items-center gap-4 text-xs text-[#3a5c3a] mb-8 border-y border-[#1a2a1a] py-4">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-white mb-8 border-y border-[#1a2a1a] py-4">
             <span className="flex items-center gap-1.5">
               <User className="w-3.5 h-3.5" />
               {post.author}

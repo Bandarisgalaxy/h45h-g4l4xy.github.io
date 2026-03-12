@@ -3,7 +3,7 @@ import { Shield, Terminal, Cpu, Award, BookOpen, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "About | H45H G4L4XY",
-  description: "HARSHITH — Cybersecurity Researcher | SOC Analyst | CTF Player",
+  description: "HARSHITH — Cybersecurity enthusiast | CTF Player",
 };
 
 const SKILLS = [

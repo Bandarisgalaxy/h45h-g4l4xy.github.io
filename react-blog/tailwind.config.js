@@ -9,15 +9,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'neon-green': '#00ff41',
-        'neon-green-dim': '#00cc33',
-        'neon-green-glow': '#00ff4133',
-        'cyber-dark': '#0a0a0a',
-        'cyber-darker': '#050505',
-        'cyber-card': '#111111',
-        'cyber-border': '#1a2a1a',
-        'cyber-text': '#ccffcc',
-        'cyber-muted': '#4a7c4a',
+        'neon-green': '#4ade80',
+        'neon-green-dim': '#22c55e',
+        'neon-green-glow': 'rgba(74, 222, 128, 0.25)',
+        'cyber-dark': '#0d1110',
+        'cyber-darker': '#080a09',
+        'cyber-card': '#121814',
+        'cyber-border': '#1d2a20',
+        'cyber-text': '#dcfce7',
+        'cyber-muted': '#248c46' /* Brightened from #166534 */,
       },
       fontFamily: {
         mono: ['Roboto Mono', 'monospace'],
@@ -37,8 +37,8 @@ module.exports = {
           '100%': { transform: 'translateY(100vh)' },
         },
         glowPulse: {
-          '0%, 100%': { filter: 'drop-shadow(0 0 8px #00ff41)' },
-          '50%': { filter: 'drop-shadow(0 0 20px #00ff41)' },
+          '0%, 100%': { filter: 'drop-shadow(0 0 8px #4ade80)' },
+          '50%': { filter: 'drop-shadow(0 0 20px #4ade80)' },
         },
         typeCursor: {
           '0%, 100%': { opacity: '1' },
@@ -58,9 +58,9 @@ module.exports = {
         },
       },
       boxShadow: {
-        neon: '0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 40px #00ff41',
-        'neon-sm': '0 0 5px #00ff41, 0 0 10px #00ff41',
-        'neon-subtle': '0 0 5px rgba(0,255,65,0.3)',
+        neon: '0 0 10px #4ade80, 0 0 20px #4ade80, 0 0 40px #4ade80',
+        'neon-sm': '0 0 5px #4ade80, 0 0 10px #4ade80',
+        'neon-subtle': '0 0 5px rgba(74, 222, 128, 0.3)',
       },
       typography: {
         DEFAULT: {

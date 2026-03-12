@@ -61,7 +61,7 @@ function BlogCard({ post, index = 0 }: BlogCardProps) {
         </p>
 
         {/* Meta row */}
-        <div className="flex items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+        <div className="flex items-center justify-between gap-2 text-xs text-white">
           <div className="flex items-center gap-3">
             {post.date && (
               <span className="flex items-center gap-1">
