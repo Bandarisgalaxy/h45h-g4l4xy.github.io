@@ -31,6 +31,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        {/* Prevent caching of the HTML document itself */}
+        <meta
+          httpEquiv="Cache-Control"
+          content="no-cache, no-store, must-revalidate"
+        />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -54,6 +61,12 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `try{if(!sessionStorage.getItem('siteLoaded')){document.documentElement.setAttribute('data-first-visit','');}}catch(e){}`,
+          }}
+        />
+        {/* Unregister any old Service Workers directly on page load */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){for(let i=0;i<r.length;i++){r[i].unregister()}})}`,
           }}
         />
       </head>
